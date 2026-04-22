@@ -1,0 +1,1 @@
+  // Flutter bindings initialize කිරීම

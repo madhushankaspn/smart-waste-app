@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "539933488247",
+    "project_id": "smart-waste-nsbm-30",
+    "storage_bucket": "smart-waste-nsbm-30.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539933488247:android:32c967ec14cdfe9bcf8272",
+        "android_client_info": {
+          "package_name": "com.example.swm_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAFeUBkUKQ0mKy6yeQUQzoEqkiB6T1kxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
