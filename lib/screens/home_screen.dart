@@ -1,16 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:convert'; // Base64 ෆොටෝ එක පෙන්වන්න මේක ඕනේ
+import 'dart:convert';
 import 'login_screen.dart';
 import 'report_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // Level එක අනුව පාට වෙනස් කරන Function එක
+  Color _getLevelColor(String level) {
+    switch (level) {
+      case 'Silver':
+        return Colors.blueGrey;
+      case 'Gold':
+        return Colors.amber.shade700;
+      case 'Platinum':
+        return Colors.deepPurple;
+      default:
+        return Colors.brown.shade400; // Bronze
+    }
+  }
+
+  // Level එක අනුව Icon එක වෙනස් කරන Function එක
+  IconData _getLevelIcon(String level) {
+    switch (level) {
+      case 'Silver':
+        return Icons.workspace_premium;
+      case 'Gold':
+        return Icons.emoji_events;
+      case 'Platinum':
+        return Icons.diamond;
+      default:
+        return Icons.star_border; // Bronze
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // දැනට ලොග් වෙලා ඉන්න User
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -18,7 +45,7 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Smart Waste Dashboard',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         backgroundColor: Colors.green,
         elevation: 0,
@@ -37,166 +64,261 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      // මෙතනින් තමයි Database එකෙන් Data ගන්නේ
-      body: StreamBuilder<QuerySnapshot>(
-        // reports collection එකේ දත්ත, අලුත්ම ඒවා උඩින් එන්න (descending) ගන්නවා
-        stream: FirebaseFirestore.instance
-            .collection('reports')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          // Loading වෙන වෙලාවට
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.green),
-            );
-          }
+      body: Column(
+        children: [
+          // 1. Points සහ Level එක පෙන්වන කොටස (Real-time update වෙනවා)
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUser?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return const SizedBox(); // Data එනකන් මුකුත් පෙන්වන්නේ නෑ
+              }
 
-          // Error එකක් ආවොත්
-          if (snapshot.hasError) {
-            return const Center(child: Text('Something went wrong!'));
-          }
+              var userData = snapshot.data!.data() as Map<String, dynamic>;
+              int points = userData['points'] ?? 0;
+              String level = userData['level'] ?? 'Bronze';
+              Color levelColor = _getLevelColor(level);
 
-          // දත්ත මුකුත් නැත්නම්
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inbox, size: 60, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No reports found.',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+              return Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [levelColor, levelColor.withOpacity(0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Text(
-                    'Click + to add a new report.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Data තියෙනවා නම් List එකක් විදිහට පෙන්වනවා
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var report =
-                  snapshot.data!.docs[index].data() as Map<String, dynamic>;
-
-              // ෆොටෝ එකේ අකුරු ටික ගන්නවා
-              String? base64String = report['imageBase64'];
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: levelColor.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- Image කොටස ---
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          color: Colors.grey.shade200,
-                          child: base64String != null && base64String.isNotEmpty
-                              ? Image.memory(
-                                  base64Decode(
-                                    base64String,
-                                  ), // අකුරු ටික ෆොටෝ එකක් කරනවා
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey,
-                                      ),
-                                )
-                              : const Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey,
-                                ),
-                        ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 16),
+                      child: Icon(
+                        _getLevelIcon(level),
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$level Level',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            points >= 1000
+                                ? 'You reached the max level!'
+                                : 'Next level at ${level == 'Bronze'
+                                      ? 100
+                                      : level == 'Silver'
+                                      ? 500
+                                      : 1000} points',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          'Points',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
+                        Text(
+                          '$points',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
 
-                      // --- විස්තර කොටස ---
-                      Expanded(
-                        child: Column(
+          // 2. තමන්ගේ Reports ටික පෙන්වන List එක
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('reports')
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.green),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Something went wrong!'));
+                }
+
+                // මෙතනින් තමයි වෙනත් අයගේ ඒවා අයින් කරලා, තමන්ගේ (currentUser) ඒවා විතරක් ෆිල්ටර් කරන්නේ
+                var myReports = snapshot.data!.docs.where((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+                  return data['userId'] == currentUser?.uid;
+                }).toList();
+
+                // තමන් දාපු Reports මුකුත් නැත්නම්
+                if (myReports.isEmpty) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inbox, size: 60, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'You have no reports yet.',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: myReports.length,
+                  itemBuilder: (context, index) {
+                    var report =
+                        myReports[index].data() as Map<String, dynamic>;
+                    String? base64String = report['imageBase64'];
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              report['title'] ?? 'No Title',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                color: Colors.grey.shade200,
+                                child:
+                                    base64String != null &&
+                                        base64String.isNotEmpty
+                                    ? Image.memory(
+                                        base64Decode(base64String),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) =>
+                                            const Icon(Icons.broken_image),
+                                      )
+                                    : const Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey,
+                                      ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  size: 14,
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    report['location'] ?? 'Unknown Location',
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    report['title'] ?? 'No Title',
                                     style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            // Status Badge එක (Pending/Resolved පෙන්වන්න)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: report['status'] == 'Pending'
-                                    ? Colors.orange.shade100
-                                    : Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                report['status'] ?? 'Pending',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: report['status'] == 'Pending'
-                                      ? Colors.orange.shade800
-                                      : Colors.green.shade800,
-                                ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          report['location'] ?? 'Unknown',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: report['status'] == 'Pending'
+                                          ? Colors.orange.shade100
+                                          : Colors.green.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      report['status'] ?? 'Pending',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: report['status'] == 'Pending'
+                                            ? Colors.orange.shade800
+                                            : Colors.green.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -206,7 +328,7 @@ class HomeScreen extends StatelessWidget {
           );
         },
         backgroundColor: Colors.green,
-        icon: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add_a_photo, color: Colors.white),
         label: const Text('New Report', style: TextStyle(color: Colors.white)),
       ),
     );
