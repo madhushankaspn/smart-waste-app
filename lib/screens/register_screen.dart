@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,16 +21,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Firebase Auth හරහා user ව create කිරීම
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      
+      // 1. Firebase Auth හරහා user ව create කිරීම
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+
+      // 2. අලුත් User ගේ විස්තර Firestore 'users' collection එකේ save කරනවා (Points සහ Level එකත් එක්ක)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+            'email': _emailController.text.trim(),
+            'points': 0,
+            'level': 'Bronze',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
       // Success වුනාම Message එකක් පෙන්වීම
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration Successful! Please Login.'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Registration Successful! Please Login.'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context); // ආපහු Login screen එකට යවනවා
       }
@@ -37,7 +53,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Error එකක් ආවොත් ඒක පෙන්වීම
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'An error occurred'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.message ?? 'An error occurred'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -71,7 +90,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const Text(
                 'Create Account',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -120,11 +143,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   onPressed: _isLoading ? null : _registerUser,
-                  child: _isLoading 
+                  child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Register',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
