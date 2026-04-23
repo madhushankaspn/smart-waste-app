@@ -50,6 +50,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  // Database එකට යවන Function එක
   Future<void> _submitReport() async {
     if (_titleController.text.isEmpty ||
         _descController.text.isEmpty ||
@@ -78,16 +79,20 @@ class _ReportScreenState extends State<ReportScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
-      await FirebaseFirestore.instance.collection('reports').add({
-        'title': _titleController.text.trim(),
-        'description': _descController.text.trim(),
-        'location': _locationController.text.trim(),
-        'imageBase64': _base64Image,
-        'userId': user?.uid,
-        'userEmail': user?.email,
-        'status': 'Pending',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      // තත්පර 15ක Timeout එකක් දාලා තියෙන්නේ. ඊට වඩා ගියොත් Error එකක් පෙන්වනවා.
+      await FirebaseFirestore.instance
+          .collection('reports')
+          .add({
+            'title': _titleController.text.trim(),
+            'description': _descController.text.trim(),
+            'location': _locationController.text.trim(),
+            'imageBase64': _base64Image,
+            'userId': user?.uid,
+            'userEmail': user?.email,
+            'status': 'Pending',
+            'timestamp': FieldValue.serverTimestamp(),
+          })
+          .timeout(const Duration(seconds: 15));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,9 +104,16 @@ class _ReportScreenState extends State<ReportScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      // මොකක් හරි වැරදුනොත් Loading එක නවත්තලා Error එක පෙන්වනවා
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(
+              'Upload Failed! Image might be too large. (Error: $e)',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
