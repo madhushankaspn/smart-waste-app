@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
+import 'report_screen.dart'; // මේක අලුතින් import කරන්න
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // දැනට Login වෙලා ඉන්න User ගේ විස්තර ගන්නවා
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -18,7 +18,6 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              // Logout වෙන Function එක
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
                 Navigator.pushReplacement(
@@ -50,6 +49,21 @@ class HomeScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
+        ),
+      ),
+      // මේ FloatingActionButton එක අලුතින් එකතු වුණේ
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ReportScreen()),
+          );
+        },
+        backgroundColor: Colors.green,
+        icon: const Icon(Icons.add_a_photo, color: Colors.white),
+        label: const Text(
+          'Report Waste',
+          style: TextStyle(color: Colors.white),
         ),
       ),
     );
