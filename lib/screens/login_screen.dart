@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'admin_dashboard.dart'; // Admin Dashboard එක උඩින්ම import කරලා තියෙන්නේ
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,26 +17,50 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // Firebase Login Function එක
-  import 'admin_dashboard.dart'; // උඩින්ම මේක import කරන්න
+  Future<void> _loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-// ... (ඇතුලෙ code එක) ...
-      // Login එක Success වුණාම
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Login එක Success නම්, Admin ද සාමාන්‍ය කෙනෙක්ද කියලා බලනවා
       if (mounted) {
-        // Admin ගේ Email එක නම් Admin Dashboard එකට යනවා
         if (_emailController.text.trim() == 'admin@smartwaste.com') {
+          // Admin නම් Admin Dashboard එකට යනවා
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const AdminDashboard()),
           );
         } else {
-          // සාමාන්‍ය කෙනෙක් නම් Home Screen එකට යනවා
+          // සාමාන්‍ය User කෙනෙක් නම් Home Screen එකට යනවා
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         }
       }
-// ...
+    } on FirebaseAuthException catch (e) {
+      // Error එකක් ආවොත් පෙන්වනවා
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Login failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -128,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Register Button (මේකෙන් Register Screen එකට යනවා)
+              // Register Button
               TextButton(
                 onPressed: () {
                   Navigator.push(
