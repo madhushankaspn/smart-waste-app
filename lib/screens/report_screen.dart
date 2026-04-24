@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart'; // මේක අලුතින් ඕනේ
 import 'dart:typed_data';
 import 'dart:convert';
+import 'map_picker_screen.dart'; // මැප් එක තියෙන ෆයිල් එක
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -15,30 +17,24 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-  final _locationController = TextEditingController();
   bool _isLoading = false;
 
   Uint8List? _selectedImageBytes;
   String? _base64Image;
+  LatLng? _pickedLocation; // තෝරගත්ත මැප් ලොකේෂන් එක සේව් කරන්න
   final ImagePicker _picker = ImagePicker();
 
-  // අලුත් කරපු Image Pick කරන Function එක
   Future<void> _pickImage() async {
     try {
-      // Web එකට අවුලක් නොඑන්න සාමාන්‍ය විදිහටම ෆොටෝ එක ගන්නවා
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
       if (image != null) {
         final bytes = await image.readAsBytes();
-        final base64String = base64Encode(bytes);
-
         setState(() {
           _selectedImageBytes = bytes;
-          _base64Image = base64String;
+          _base64Image = base64Encode(bytes);
         });
       }
     } catch (e) {
-      // මොකක් හරි අවුලක් ගියොත් අපිට රතු පාටින් Error එක පෙන්වයි
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -50,25 +46,35 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  // Database එකට යවන Function එක
+  // මැප් එක ඕපන් කරන Function එක
+  Future<void> _openMapPicker() async {
+    final LatLng? result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MapPickerScreen()),
+    );
+
+    if (result != null) {
+      setState(() {
+        _pickedLocation = result;
+      });
+    }
+  }
+
   Future<void> _submitReport() async {
-    // --- Validation කෑල්ල ---
-    if (_titleController.text.isEmpty ||
-        _descController.text.isEmpty ||
-        _locationController.text.isEmpty) {
+    if (_titleController.text.isEmpty || _descController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill all text fields'),
+          content: Text('Please fill all fields'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (_base64Image == null) {
+    if (_base64Image == null || _pickedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select an image'),
+          content: Text('Please select an image and map location'),
           backgroundColor: Colors.red,
         ),
       );
@@ -80,22 +86,22 @@ class _ReportScreenState extends State<ReportScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
-      // 1. Report එක save කරනවා (Points එකතු කරන්නේ Admin Approve කරාමයි)
       await FirebaseFirestore.instance
           .collection('reports')
           .add({
             'title': _titleController.text.trim(),
             'description': _descController.text.trim(),
-            'location': _locationController.text.trim(),
             'imageBase64': _base64Image,
             'userId': user?.uid,
             'userEmail': user?.email,
-            'status': 'Pending', // මුලින්ම Pending
+            'status': 'Pending',
+            // මැප් ලොකේෂන් දත්ත මෙතනින් සේව් වෙනවා
+            'latitude': _pickedLocation!.latitude,
+            'longitude': _pickedLocation!.longitude,
             'timestamp': FieldValue.serverTimestamp(),
           })
           .timeout(const Duration(seconds: 15));
 
-      // Success වුනාම පෙන්වන මැසේජ් එක
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -103,32 +109,17 @@ class _ReportScreenState extends State<ReportScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context); // Home එකට යනවා
+        Navigator.pop(context);
       }
     } catch (e) {
-      // --- Error Handling කෑල්ල ---
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Upload Failed! Image might be too large. (Error: $e)',
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descController.dispose();
-    _locationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -142,18 +133,16 @@ class _ReportScreenState extends State<ReportScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            // Image Picker Section
             GestureDetector(
               onTap: _pickImage,
               child: Container(
-                height: 200,
+                height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey.shade400,
-                    style: BorderStyle.solid,
-                  ),
+                  border: Border.all(color: Colors.grey.shade400),
                 ),
                 child: _selectedImageBytes != null
                     ? ClipRRect(
@@ -161,19 +150,12 @@ class _ReportScreenState extends State<ReportScreen> {
                         child: Image.memory(
                           _selectedImageBytes!,
                           fit: BoxFit.cover,
-                          width: double.infinity,
                         ),
                       )
-                    : const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
-                          SizedBox(height: 8),
-                          Text(
-                            'Tap to add a photo',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
+                    : const Icon(
+                        Icons.add_a_photo,
+                        size: 50,
+                        color: Colors.grey,
                       ),
               ),
             ),
@@ -188,19 +170,47 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 16),
 
-            TextField(
-              controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: 'Location',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.map),
+            // මැප් එකෙන් ලොකේෂන් තෝරන Button එක
+            InkWell(
+              onTap: _openMapPicker,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: _pickedLocation != null ? Colors.green : Colors.grey,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.map,
+                      color: _pickedLocation != null
+                          ? Colors.green
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _pickedLocation == null
+                            ? 'Select Location from Map'
+                            : 'Location Selected: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
+                        style: TextStyle(
+                          color: _pickedLocation != null
+                              ? Colors.green
+                              : Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
 
             TextField(
               controller: _descController,
-              maxLines: 4,
+              maxLines: 3,
               decoration: const InputDecoration(
                 labelText: 'Description',
                 border: OutlineInputBorder(),
