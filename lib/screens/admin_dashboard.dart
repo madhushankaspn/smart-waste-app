@@ -4,23 +4,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'login_screen.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
-  // Admin Approve කරන Function එක
-  Future<void> _approveReport(
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  String _selectedFilter = 'All'; // All, Pending, Assigned තෝරන්න
+
+  // Team එක Assign කරලා Point එක දෙන Function එක
+  Future<void> _assignTeam(
     BuildContext context,
     String reportId,
     String reportUserId,
+    String teamName,
   ) async {
     try {
-      // 1. Report එකේ status එක 'Approved' කරනවා
+      // 1. Report එක Update කරනවා (Team එකත් එක්කම)
       await FirebaseFirestore.instance
           .collection('reports')
           .doc(reportId)
-          .update({'status': 'Approved'});
+          .update({'status': 'Assigned', 'assignedTeam': teamName});
 
-      // 2. Report එක දාපු User ට Point එක දෙනවා
+      // 2. Report එක දැම්ම User ට Point එක දෙනවා
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(reportUserId)
@@ -49,7 +57,7 @@ class AdminDashboard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Report Approved & Point Awarded!'),
+            content: Text('Team Assigned & Point Awarded!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -63,18 +71,64 @@ class AdminDashboard extends StatelessWidget {
     }
   }
 
+  // Team තෝරන Popup (Dialog) එක පෙන්වන Function එක
+  void _showAssignDialog(
+    BuildContext context,
+    String reportId,
+    String reportUserId,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Assign Collection Team',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children:
+              [
+                'Team Alpha (Truck 1)',
+                'Team Beta (Truck 2)',
+                'Team Gamma (Truck 3)',
+              ].map((team) {
+                return ListTile(
+                  leading: const Icon(
+                    Icons.local_shipping,
+                    color: Colors.green,
+                  ),
+                  title: Text(team),
+                  onTap: () {
+                    Navigator.pop(context); // Dialog එක වහනවා
+                    _assignTeam(
+                      context,
+                      reportId,
+                      reportUserId,
+                      team,
+                    ); // Team එක Assign කරනවා
+                  },
+                );
+              }).toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         title: const Text(
-          'Admin Dashboard',
-          style: TextStyle(color: Colors.white),
+          'Report Management',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.black87, // Admin එක අඳුරගන්න කළු පාටක් දුන්නා
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
@@ -87,118 +141,222 @@ class AdminDashboard extends StatelessWidget {
           ),
         ],
       ),
-      // ඔක්කොම Reports ගන්නවා (Pending ඒවා උඩින් එන්න)
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('reports')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No reports available.'));
-          }
+      body: Column(
+        children: [
+          // --- Filters ටික (All, Pending, Assigned) ---
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.white,
+            child: Row(
+              children: ['All', 'Pending', 'Assigned'].map((filter) {
+                bool isSelected = _selectedFilter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      filter,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: Colors.green,
+                    backgroundColor: Colors.grey.shade200,
+                    onSelected: (selected) {
+                      setState(() => _selectedFilter = filter);
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var document = snapshot.data!.docs[index];
-              var report = document.data() as Map<String, dynamic>;
-              String reportId = document.id; // Document ID එක ගන්නවා
-              String reportUserId = report['userId'] ?? '';
-              String status = report['status'] ?? 'Pending';
-              String? base64String = report['imageBase64'];
+          // --- Reports List එක ---
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('reports')
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.green),
+                  );
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                  return const Center(
+                    child: Text(
+                      'No reports found.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              color: Colors.grey.shade200,
-                              child:
-                                  base64String != null &&
-                                      base64String.isNotEmpty
-                                  ? Image.memory(
-                                      base64Decode(base64String),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : const Icon(Icons.image),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
+                // User තෝරපු Filter එකට අනුව Data වෙන් කරනවා
+                var reports = snapshot.data!.docs.where((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+                  if (_selectedFilter == 'All') return true;
+                  return data['status'] == _selectedFilter;
+                }).toList();
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: reports.length,
+                  itemBuilder: (context, index) {
+                    var document = reports[index];
+                    var report = document.data() as Map<String, dynamic>;
+                    String status = report['status'] ?? 'Pending';
+                    String assignedTeam = report['assignedTeam'] ?? '';
+                    String? base64String = report['imageBase64'];
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  report['title'] ?? 'No Title',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: 70,
+                                    height: 70,
+                                    color: Colors.grey.shade200,
+                                    child:
+                                        base64String != null &&
+                                            base64String.isNotEmpty
+                                        ? Image.memory(
+                                            base64Decode(base64String),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(
+                                            Icons.image,
+                                            color: Colors.grey,
+                                          ),
                                   ),
                                 ),
-                                Text(
-                                  report['location'] ?? 'Unknown Location',
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                                Text(
-                                  'By: ${report['userEmail'] ?? 'Unknown User'}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Status: $status',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: status == 'Pending'
-                                        ? Colors.orange
-                                        : Colors.green,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        report['title'] ?? 'Report',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.location_on,
+                                            size: 14,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              report['location'] ?? 'Unknown',
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: status == 'Pending'
+                                              ? Colors.orange.shade50
+                                              : Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          status == 'Assigned'
+                                              ? 'Assigned: $assignedTeam'
+                                              : status,
+                                          style: TextStyle(
+                                            color: status == 'Pending'
+                                                ? Colors.orange.shade800
+                                                : Colors.green.shade800,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Pending නම් විතරක් Approve Button එක පෙන්වනවා
-                      if (status == 'Pending')
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                            const SizedBox(height: 16),
+
+                            // Button එක
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: status == 'Pending'
+                                      ? Colors.green
+                                      : Colors.grey.shade100,
+                                  foregroundColor: status == 'Pending'
+                                      ? Colors.white
+                                      : Colors.green,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                icon: Icon(
+                                  status == 'Pending'
+                                      ? Icons.group_add
+                                      : Icons.check_circle,
+                                ),
+                                label: Text(
+                                  status == 'Pending'
+                                      ? 'Assign Team'
+                                      : 'Track Progress',
+                                ),
+                                onPressed: status == 'Pending'
+                                    ? () => _showAssignDialog(
+                                        context,
+                                        document.id,
+                                        report['userId'],
+                                      )
+                                    : null, // Assigned නම් button එක ඔබන්න බෑ
+                              ),
                             ),
-                            onPressed: () =>
-                                _approveReport(context, reportId, reportUserId),
-                            child: const Text(
-                              'Approve & Give Point',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
+                          ],
                         ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
