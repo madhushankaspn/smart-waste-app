@@ -16,41 +16,26 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // Firebase Login Function එක
-  Future<void> _loginUser() async {
-    setState(() {
-      _isLoading = true;
-    });
+  import 'admin_dashboard.dart'; // උඩින්ම මේක import කරන්න
 
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      // Login එක Success නම් Home Screen එකට යවනවා
+// ... (ඇතුලෙ code එක) ...
+      // Login එක Success වුණාම
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        // Admin ගේ Email එක නම් Admin Dashboard එකට යනවා
+        if (_emailController.text.trim() == 'admin@smartwaste.com') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          );
+        } else {
+          // සාමාන්‍ය කෙනෙක් නම් Home Screen එකට යනවා
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      // Error එකක් ආවොත් (උදා: වැරදි password) පෙන්වනවා
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message ?? 'Login failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
+// ...
   @override
   void dispose() {
     _emailController.dispose();
