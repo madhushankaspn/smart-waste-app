@@ -50,7 +50,6 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  
   // Database එකට යවන Function එක
   Future<void> _submitReport() async {
     // --- Validation කෑල්ල ---
@@ -81,7 +80,7 @@ class _ReportScreenState extends State<ReportScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
-      // 1. Report එක save කරනවා (Timeout එකත් එක්ක)
+      // 1. Report එක save කරනවා (Points එකතු කරන්නේ Admin Approve කරාමයි)
       await FirebaseFirestore.instance
           .collection('reports')
           .add({
@@ -91,51 +90,16 @@ class _ReportScreenState extends State<ReportScreen> {
             'imageBase64': _base64Image,
             'userId': user?.uid,
             'userEmail': user?.email,
-            'status': 'Pending',
+            'status': 'Pending', // මුලින්ම Pending
             'timestamp': FieldValue.serverTimestamp(),
           })
           .timeout(const Duration(seconds: 15));
-
-      // ---------------------------------------------------------
-      // 2. අලුත් කෑල්ල: User ගේ Points Update කිරීම
-      if (user != null) {
-        // දැනට තියෙන points ටික ගන්නවා
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
-        int currentPoints = 0;
-        if (userDoc.exists && userDoc.data() != null) {
-          var data = userDoc.data() as Map<String, dynamic>;
-          currentPoints = data['points'] ?? 0;
-        }
-
-        int newPoints = currentPoints + 1; // Report එකකට Point 1 යි
-        String newLevel = 'Bronze';
-
-        // Level Logic එක
-        if (newPoints >= 1000) {
-          newLevel = 'Platinum'; // Platinum - Cinnamon Grand Dinner
-        } else if (newPoints >= 500) {
-          newLevel = 'Gold';
-        } else if (newPoints >= 100) {
-          newLevel = 'Silver';
-        }
-
-        // අලුත් Points සහ Level එක Database එකේ update කරනවා
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
-          {'points': newPoints, 'level': newLevel},
-          SetOptions(merge: true),
-        ); // merge: true දුන්නම අනිත් data මැකෙන්නේ නෑ
-      }
-      // ---------------------------------------------------------
 
       // Success වුනාම පෙන්වන මැසේජ් එක
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('+1 Point! Report Submitted Successfully!'),
+            content: Text('Report Submitted! Waiting for Admin Approval.'),
             backgroundColor: Colors.green,
           ),
         );
