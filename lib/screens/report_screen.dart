@@ -85,6 +85,93 @@ class _ReportScreenState extends State<ReportScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // ------------------------------------------------------------------
+      // අලුත් කෑල්ල: කලින් රිපෝට් කරලා තියෙනවද කියලා දුර මැනලා බලන කොටස
+      // ------------------------------------------------------------------
+
+      // Database එකේ දැනට තියෙන (Pending සහ Assigned) රිපෝට් ටික ගන්නවා
+      QuerySnapshot existingReports = await FirebaseFirestore.instance
+          .collection('reports')
+          .where('status', whereIn: ['Pending', 'Assigned'])
+          .get();
+
+      bool isDuplicate = false;
+
+      // එකින් එක අරන් දුර බලනවා
+      for (var doc in existingReports.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        double? lat = data['latitude'];
+        double? lng = data['longitude'];
+
+        if (lat != null && lng != null) {
+          // අලුත් ලොකේෂන් එකයි, පරණ ලොකේෂන් එකයි අතර දුර මීටර් වලින් මනිනවා
+          double distanceInMeters = Geolocator.distanceBetween(
+            _pickedLocation!.latitude,
+            _pickedLocation!.longitude,
+            lat,
+            lng,
+          );
+
+          // මීටර් 50කට වඩා අඩු නම්, ඒක Duplicate එකක් විදිහට සලකනවා
+          if (distanceInMeters < 50) {
+            isDuplicate = true;
+            break; // Loop එක නවත්තනවා
+          }
+        }
+      }
+
+      // කලින් රිපෝට් කරපු එකක් නම්, Pop-up එක පෙන්නලා සේව් කරන එක නවත්තනවා
+      if (isDuplicate) {
+        setState(() => _isLoading = false); // Loading එක නවත්තනවා
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange, size: 28),
+                  SizedBox(width: 8),
+                  Text(
+                    'Already Reported!',
+                    style: TextStyle(color: Colors.orange),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'This garbage location has already been reported by someone else recently.\n\nThank you for your vigilance!',
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // Pop-up එක වහනවා
+                      Navigator.pop(
+                        context,
+                      ); // Report Screen එකෙනුත් අයින් වෙලා Home එකට යනවා
+                    },
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return; // Function එක මෙතනින් නවත්තනවා (Database එකට යවන්නේ නෑ)
+      }
+      // ------------------------------------------------------------------
+
+      // අලුත් එකක් නම් සාමාන්‍ය විදිහටම Database එකට Save කරනවා
       final user = FirebaseAuth.instance.currentUser;
 
       await FirebaseFirestore.instance
@@ -96,7 +183,6 @@ class _ReportScreenState extends State<ReportScreen> {
             'userId': user?.uid,
             'userEmail': user?.email,
             'status': 'Pending',
-            // මැප් ලොකේෂන් දත්ත මෙතනින් සේව් වෙනවා
             'latitude': _pickedLocation!.latitude,
             'longitude': _pickedLocation!.longitude,
             'timestamp': FieldValue.serverTimestamp(),
