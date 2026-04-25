@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:convert';
 import 'login_screen.dart';
 
@@ -12,9 +14,8 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  String _selectedFilter = 'All'; // All, Pending, Assigned තෝරන්න
+  String _selectedFilter = 'All';
 
-  // Team එක Assign කරලා Point එක දෙන Function එක
   Future<void> _assignTeam(
     BuildContext context,
     String reportId,
@@ -22,13 +23,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     String teamName,
   ) async {
     try {
-      // 1. Report එක Update කරනවා (Team එකත් එක්කම)
       await FirebaseFirestore.instance
           .collection('reports')
           .doc(reportId)
           .update({'status': 'Assigned', 'assignedTeam': teamName});
 
-      // 2. Report එක දැම්ම User ට Point එක දෙනවා
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(reportUserId)
@@ -71,7 +70,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  // Team තෝරන Popup (Dialog) එක පෙන්වන Function එක
   void _showAssignDialog(
     BuildContext context,
     String reportId,
@@ -99,13 +97,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                   title: Text(team),
                   onTap: () {
-                    Navigator.pop(context); // Dialog එක වහනවා
-                    _assignTeam(
-                      context,
-                      reportId,
-                      reportUserId,
-                      team,
-                    ); // Team එක Assign කරනවා
+                    Navigator.pop(context);
+                    _assignTeam(context, reportId, reportUserId, team);
                   },
                 );
               }).toList(),
@@ -143,7 +136,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
       body: Column(
         children: [
-          // --- Filters ටික (All, Pending, Assigned) ---
+          // Filters
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: Colors.white,
@@ -172,7 +165,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
 
-          // --- Reports List එක ---
+          // Reports List
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -192,7 +185,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                   );
 
-                // User තෝරපු Filter එකට අනුව Data වෙන් කරනවා
                 var reports = snapshot.data!.docs.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
                   if (_selectedFilter == 'All') return true;
@@ -209,17 +201,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     String assignedTeam = report['assignedTeam'] ?? '';
                     String? base64String = report['imageBase64'];
 
+                    // Database එකෙන් Latitude Longitude ගන්නවා
+                    double? lat = report['latitude'];
+                    double? lng = report['longitude'];
+                    LatLng? reportLocation;
+                    if (lat != null && lng != null) {
+                      reportLocation = LatLng(lat, lng);
+                    }
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 0,
+                      elevation: 2,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // විස්තර සහ ෆොටෝ එක
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -256,24 +257,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.location_on,
-                                            size: 14,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
-                                            child: Text(
-                                              report['location'] ?? 'Unknown',
-                                              style: const TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                      Text(
+                                        'By: ${report['userEmail'] ?? 'Unknown'}',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       Container(
@@ -307,6 +296,55 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 ),
                               ],
                             ),
+
+                            // අලුතින් එකතු කරපු මැප් කොටස
+                            if (reportLocation != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 120, // මැප් එකේ උස
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: FlutterMap(
+                                    options: MapOptions(
+                                      initialCenter: reportLocation,
+                                      initialZoom: 15.0,
+                                      interactionOptions: const InteractionOptions(
+                                        flags: InteractiveFlag
+                                            .none, // Admin ට මැප් එක අදින්න දෙන්නේ නෑ, නිකන් පෙන්නනවා විතරයි
+                                      ),
+                                    ),
+                                    children: [
+                                      TileLayer(
+                                        urlTemplate:
+                                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        userAgentPackageName:
+                                            'com.example.swm_app',
+                                      ),
+                                      MarkerLayer(
+                                        markers: [
+                                          Marker(
+                                            point: reportLocation,
+                                            width: 40,
+                                            height: 40,
+                                            child: const Icon(
+                                              Icons.location_on,
+                                              color: Colors.red,
+                                              size: 30,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 16),
 
                             // Button එක
@@ -344,7 +382,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         document.id,
                                         report['userId'],
                                       )
-                                    : null, // Assigned නම් button එක ඔබන්න බෑ
+                                    : null,
                               ),
                             ),
                           ],
