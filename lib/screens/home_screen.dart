@@ -15,16 +15,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _lastSavedPoints = -1;
-  String _userArea = "Maharagama Zone"; // මුලින්ම තියෙන Area එක
-  int _currentIndex = 0; // Bottom Nav Bar එකේ දැනට ඉන්න Tab එක
+  String _userArea = "Maharagama Zone";
+  int _currentIndex = 0; // 0 = Home, 1 = Rewards, 2 = Profile
 
   @override
   void initState() {
     super.initState();
-    _loadData(); // App එක ලෝඩ් වෙද්දිම සේව් වෙලා තියෙන Data ගන්නවා
+    _loadData();
   }
 
-  // Points සහ Area එක ෆෝන් එකෙන් ලෝඩ් කරන Function එක
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -33,31 +32,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Points අලුත් කරන Function එක
   Future<void> _updateLastPoints(int newPoints) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_points', newPoints);
     _lastSavedPoints = newPoints;
   }
 
-  // Area එක මාරු කරන Function එක
   Future<void> _changeArea(String newArea) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_area', newArea);
-    setState(() {
-      _userArea = newArea;
-    });
-    if (mounted) {
+    setState(() => _userArea = newArea);
+    if (mounted)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Area updated to $newArea!'),
           backgroundColor: Colors.green,
         ),
       );
-    }
   }
 
-  // Area එක තෝරන Dialog එක පෙන්වන Function එක
   void _showChangeAreaDialog() {
     List<String> areas = [
       'Colombo Zone',
@@ -66,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
       'Kaduwela Zone',
       'Dehiwala Zone',
     ];
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -105,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // +1 Point Popup එක
   void _showRewardPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -230,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        if (unreadNotifications.isEmpty) {
+        if (unreadNotifications.isEmpty)
           return const SizedBox(
             height: 200,
             child: Center(
@@ -240,7 +231,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
-        }
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -334,93 +324,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showRewardsInfo(BuildContext context, int currentPoints) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Your Rewards Journey',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'You currently have $currentPoints Points',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _buildRewardCard(
-              title: 'Platinum Level',
-              points: '1000 Points',
-              subtitle: '50% OFF Dinner at Cinnamon Grand Colombo',
-              icon: Icons.diamond,
-              color: Colors.deepPurple,
-              isUnlocked: currentPoints >= 1000,
-            ),
-            _buildRewardCard(
-              title: 'Gold Level',
-              points: '500 Points',
-              subtitle: 'Priority Report Verification & VIP Status',
-              icon: Icons.emoji_events,
-              color: Colors.amber.shade700,
-              isUnlocked: currentPoints >= 500,
-            ),
-            _buildRewardCard(
-              title: 'Silver Level',
-              points: '100 Points',
-              subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
-              icon: Icons.workspace_premium,
-              color: Colors.blueGrey,
-              isUnlocked: currentPoints >= 100,
-            ),
-
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Got it! Keep Reporting',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildRewardCard({
     required String title,
     required String points,
@@ -433,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isUnlocked ? color.withOpacity(0.1) : Colors.grey.shade100,
+        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
         border: Border.all(
           color: isUnlocked ? color : Colors.grey.shade300,
           width: 2,
@@ -445,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isUnlocked ? color : Colors.grey.shade400,
+              color: isUnlocked ? color : Colors.grey.shade300,
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: Colors.white, size: 28),
@@ -620,7 +523,166 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 2: අලුතින් හදපු Profile Settings Tab එක
+  // TAB 2: අලුත් "Rewards" Tab එක
+  // ==============================================
+  Widget _buildRewardsTab(int points, String level, Color levelColor) {
+    // ඊළඟ Level එකට තව කීයක් ඕනෙද කියලා බලනවා
+    int nextLevelPoints = 100;
+    String nextLevelName = 'Silver';
+    if (points >= 1000) {
+      nextLevelPoints = 1000;
+      nextLevelName = 'Max Level';
+    } else if (points >= 500) {
+      nextLevelPoints = 1000;
+      nextLevelName = 'Platinum';
+    } else if (points >= 100) {
+      nextLevelPoints = 500;
+      nextLevelName = 'Gold';
+    }
+
+    double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Rewards Journey',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Earn points by reporting waste and unlock exclusive rewards!',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 24),
+
+          // Progress Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Current Level: $level',
+                          style: TextStyle(
+                            color: levelColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$points Points',
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Icon(_getLevelIcon(level), size: 50, color: levelColor),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Progress to next level',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    Text(
+                      points >= 1000
+                          ? 'Maxed Out!'
+                          : '$points / $nextLevelPoints',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey.shade200,
+                    color: Colors.green,
+                    minHeight: 10,
+                  ),
+                ),
+                if (points < 1000) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Only ${nextLevelPoints - points} points away from $nextLevelName!',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Available Rewards',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          _buildRewardCard(
+            title: 'Platinum Level',
+            points: '1000 Points',
+            subtitle: '50% OFF Dinner at Cinnamon Grand Colombo',
+            icon: Icons.diamond,
+            color: Colors.deepPurple,
+            isUnlocked: points >= 1000,
+          ),
+          _buildRewardCard(
+            title: 'Gold Level',
+            points: '500 Points',
+            subtitle: 'Priority Report Verification & VIP Status',
+            icon: Icons.emoji_events,
+            color: Colors.amber.shade700,
+            isUnlocked: points >= 500,
+          ),
+          _buildRewardCard(
+            title: 'Silver Level',
+            points: '100 Points',
+            subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
+            icon: Icons.workspace_premium,
+            color: Colors.blueGrey,
+            isUnlocked: points >= 100,
+          ),
+          const SizedBox(height: 80), // Fab එකට ඉඩ
+        ],
+      ),
+    );
+  }
+
+  // ==============================================
+  // TAB 3: Profile Settings Tab එක
   // ==============================================
   Widget _buildProfileTab(
     String email,
@@ -633,7 +695,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          // Profile Picture එක
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -679,8 +740,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 40),
-
-          // Settings Options ටික
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -693,7 +752,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -739,8 +797,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     size: 16,
                     color: Colors.grey,
                   ),
-                  onTap: () =>
-                      setState(() => _currentIndex = 0), // Home එකට යනවා
+                  onTap: () => setState(() => _currentIndex = 0),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -871,12 +928,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-              // Bottom Nav Bar එකේ තෝරන Tab එක අනුව පෙන්වන Screen එක වෙනස් වෙනවා
               body: _currentIndex == 0
                   ? Column(
                       children: [
+                        // Home Screen එකේ Points කාඩ් එක එබුවම දැන් යන්නේ අලුත් Rewards Tab එකටයි (Index 1)
                         GestureDetector(
-                          onTap: () => _showRewardsInfo(context, points),
+                          onTap: () => setState(() => _currentIndex = 1),
                           child: Container(
                             width: double.infinity,
                             margin: const EdgeInsets.all(16),
@@ -940,7 +997,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                         child: const Text(
-                                          'Tap to view rewards 🎁',
+                                          'View Rewards Journey 🎁',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.white,
@@ -1021,7 +1078,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             as Map<String, dynamic>;
                                     String? base64String =
                                         report['imageBase64'];
-
                                     return Card(
                                       margin: const EdgeInsets.only(bottom: 12),
                                       shape: RoundedRectangleBorder(
@@ -1152,6 +1208,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     )
+                  : _currentIndex == 1
+                  ? _buildRewardsTab(points, level, levelColor)
                   : _buildProfileTab(
                       currentUser?.email ?? '',
                       points,
@@ -1159,10 +1217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       levelColor,
                     ),
 
-              // මැදින් තියෙන ලොකු "New Report" Button එක
-              floatingActionButtonLocation:
-                  FloatingActionButtonLocation.centerDocked,
-              floatingActionButton: FloatingActionButton(
+              floatingActionButton: FloatingActionButton.extended(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -1173,78 +1228,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 backgroundColor: Colors.green,
                 elevation: 4,
-                child: const Icon(
-                  Icons.add_a_photo,
-                  color: Colors.white,
-                  size: 28,
+                icon: const Icon(Icons.add_a_photo, color: Colors.white),
+                label: const Text(
+                  'New Report',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
 
-              // Bottom Navigation Bar එක
-              bottomNavigationBar: BottomAppBar(
-                shape: const CircularNotchedRectangle(),
-                notchMargin: 8.0,
-                color: Colors.white,
-                elevation: 10,
-                child: SizedBox(
-                  height: 60,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      MaterialButton(
-                        minWidth: 40,
-                        onPressed: () => setState(() => _currentIndex = 0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.home_rounded,
-                              color: _currentIndex == 0
-                                  ? Colors.green
-                                  : Colors.grey,
-                            ),
-                            Text(
-                              'Home',
-                              style: TextStyle(
-                                color: _currentIndex == 0
-                                    ? Colors.green
-                                    : Colors.grey,
-                                fontSize: 12,
-                                fontWeight: _currentIndex == 0
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
+              // අලුත් Bottom Navigation Bar එක (Tabs 3 ක් තියෙනවා)
+              bottomNavigationBar: Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: BottomNavigationBar(
+                    currentIndex: _currentIndex,
+                    onTap: (index) => setState(() => _currentIndex = index),
+                    backgroundColor: Colors.white,
+                    selectedItemColor: Colors.green,
+                    unselectedItemColor: Colors.grey.shade400,
+                    showSelectedLabels: true,
+                    showUnselectedLabels: true,
+                    type: BottomNavigationBarType.fixed,
+                    items: const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home_rounded),
+                        label: 'Home',
                       ),
-                      const SizedBox(width: 40), // මැද බොත්තමට ඉඩ තියනවා
-                      MaterialButton(
-                        minWidth: 40,
-                        onPressed: () => setState(() => _currentIndex = 1),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.person_rounded,
-                              color: _currentIndex == 1
-                                  ? Colors.green
-                                  : Colors.grey,
-                            ),
-                            Text(
-                              'Profile',
-                              style: TextStyle(
-                                color: _currentIndex == 1
-                                    ? Colors.green
-                                    : Colors.grey,
-                                fontSize: 12,
-                                fontWeight: _currentIndex == 1
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.card_giftcard_rounded),
+                        label: 'Rewards',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.person_rounded),
+                        label: 'Profile',
                       ),
                     ],
                   ),
