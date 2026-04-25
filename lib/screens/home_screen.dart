@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _lastSavedPoints = -1;
   String _userArea = "Maharagama Zone";
-  int _currentIndex = 0; // 0 = Home, 1 = Rewards, 2 = Profile
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -324,6 +324,91 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showRewardsInfo(BuildContext context, int currentPoints) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Your Rewards Journey',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You currently have $currentPoints Points',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildRewardCard(
+              title: 'Platinum Level',
+              points: '1000 Points',
+              subtitle: '50% OFF Dinner at Cinnamon Grand Colombo',
+              icon: Icons.diamond,
+              color: Colors.deepPurple,
+              isUnlocked: currentPoints >= 1000,
+            ),
+            _buildRewardCard(
+              title: 'Gold Level',
+              points: '500 Points',
+              subtitle: 'Priority Report Verification & VIP Status',
+              icon: Icons.emoji_events,
+              color: Colors.amber.shade700,
+              isUnlocked: currentPoints >= 500,
+            ),
+            _buildRewardCard(
+              title: 'Silver Level',
+              points: '100 Points',
+              subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
+              icon: Icons.workspace_premium,
+              color: Colors.blueGrey,
+              isUnlocked: currentPoints >= 100,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Got it! Keep Reporting',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRewardCard({
     required String title,
     required String points,
@@ -522,11 +607,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==============================================
-  // TAB 2: අලුත් "Rewards" Tab එක
-  // ==============================================
   Widget _buildRewardsTab(int points, String level, Color levelColor) {
-    // ඊළඟ Level එකට තව කීයක් ඕනෙද කියලා බලනවා
     int nextLevelPoints = 100;
     String nextLevelName = 'Silver';
     if (points >= 1000) {
@@ -557,8 +638,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 24),
-
-          // Progress Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -650,7 +729,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-
           _buildRewardCard(
             title: 'Platinum Level',
             points: '1000 Points',
@@ -675,163 +753,350 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.blueGrey,
             isUnlocked: points >= 100,
           ),
-          const SizedBox(height: 80), // Fab එකට ඉඩ
+          const SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
+
+  // අලුත් Stat Card Widget එක (Profile එකට)
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      width: 105,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 30),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
   // ==============================================
-  // TAB 3: Profile Settings Tab එක
+  // TAB 3: අලුත් ලස්සන "Profile" Tab එක
   // ==============================================
   Widget _buildProfileTab(
     String email,
     int points,
     String level,
     Color levelColor,
+    int totalReports,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: levelColor, width: 3),
+    return Stack(
+      children: [
+        // 1. උඩින් තියෙන ලස්සන Curved Background එක
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [levelColor, levelColor.withOpacity(0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey.shade200,
-              child: Text(
-                email.isNotEmpty ? email[0].toUpperCase() : 'U',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: levelColor,
-                ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(40),
+              bottomRight: Radius.circular(40),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: levelColor.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            email,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+        ),
+
+        SingleChildScrollView(
+          padding: const EdgeInsets.only(
+            top: 80,
+            left: 16,
+            right: 16,
+            bottom: 100,
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: levelColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '$level Member • $points Points',
-              style: TextStyle(
-                color: levelColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Account Settings',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-            color: Colors.white,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
+          child: Column(
+            children: [
+              // 2. Profile Picture එක
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
                     ),
-                    child: const Icon(Icons.location_on, color: Colors.blue),
-                  ),
-                  title: const Text('My Area'),
-                  subtitle: Text(
-                    _userArea,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  onTap: _showChangeAreaDialog,
+                  ],
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.history, color: Colors.orange),
-                  ),
-                  title: const Text('Report History'),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  onTap: () => setState(() => _currentIndex = 0),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.logout, color: Colors.red),
-                  ),
-                  title: const Text(
-                    'Logout',
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.grey.shade100,
+                  child: Text(
+                    email.isNotEmpty ? email[0].toUpperCase() : 'U',
                     style: TextStyle(
-                      color: Colors.red,
+                      fontSize: 45,
                       fontWeight: FontWeight.bold,
+                      color: levelColor,
                     ),
                   ),
-                  onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                    if (context.mounted)
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                  },
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                email,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // 3. Level Badge එක
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: levelColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: levelColor.withOpacity(0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_getLevelIcon(level), size: 18, color: levelColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$level Member',
+                      style: TextStyle(
+                        color: levelColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // 4. අලුතින් දාපු Stats Row එක
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatCard(
+                    'Points',
+                    '$points',
+                    Icons.stars_rounded,
+                    Colors.amber,
+                  ),
+                  _buildStatCard(
+                    'Reports',
+                    '$totalReports',
+                    Icons.assignment_turned_in,
+                    Colors.blue,
+                  ),
+                  _buildStatCard(
+                    'Impact',
+                    '${(totalReports * 2.5).toStringAsFixed(1)} kg',
+                    Icons.eco,
+                    Colors.green,
+                  ), // නිකන් දළ අගයක් පෙන්වන්නේ
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // 5. ලස්සන කරපු Settings කාඩ් එක
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Account Settings',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 4,
+                shadowColor: Colors.black12,
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      title: const Text(
+                        'My Area',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        _userArea,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      onTap: _showChangeAreaDialog,
+                    ),
+                    const Divider(height: 1, indent: 20, endIndent: 20),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.history, color: Colors.orange),
+                      ),
+                      title: const Text(
+                        'Report History',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      onTap: () => setState(() => _currentIndex = 0),
+                    ),
+                    const Divider(height: 1, indent: 20, endIndent: 20),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.help_outline,
+                          color: Colors.purple,
+                        ),
+                      ),
+                      title: const Text(
+                        'Help & Support',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Help & Support coming soon!'),
+                          backgroundColor: Colors.purple,
+                        ),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 20, endIndent: 20),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.logout, color: Colors.red),
+                      ),
+                      title: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () async {
+                        await FirebaseAuth.instance.signOut();
+                        if (context.mounted)
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -886,7 +1151,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                backgroundColor: Colors.green,
+                backgroundColor: _currentIndex == 2
+                    ? levelColor
+                    : Colors
+                          .green, // Profile එකේදි උඩ පාටත් level පාටටම හැරෙනවා
                 elevation: 0,
                 actions: [
                   Stack(
@@ -931,7 +1199,6 @@ class _HomeScreenState extends State<HomeScreen> {
               body: _currentIndex == 0
                   ? Column(
                       children: [
-                        // Home Screen එකේ Points කාඩ් එක එබුවම දැන් යන්නේ අලුත් Rewards Tab එකටයි (Index 1)
                         GestureDetector(
                           onTap: () => setState(() => _currentIndex = 1),
                           child: Container(
@@ -1215,9 +1482,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       points,
                       level,
                       levelColor,
+                      myReports.length,
                     ),
 
-              floatingActionButton: FloatingActionButton.extended(
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+              floatingActionButton: FloatingActionButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -1228,52 +1498,104 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 backgroundColor: Colors.green,
                 elevation: 4,
-                icon: const Icon(Icons.add_a_photo, color: Colors.white),
-                label: const Text(
-                  'New Report',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: const Icon(
+                  Icons.add_a_photo,
+                  color: Colors.white,
+                  size: 28,
                 ),
               ),
 
-              // අලුත් Bottom Navigation Bar එක (Tabs 3 ක් තියෙනවා)
-              bottomNavigationBar: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  child: BottomNavigationBar(
-                    currentIndex: _currentIndex,
-                    onTap: (index) => setState(() => _currentIndex = index),
-                    backgroundColor: Colors.white,
-                    selectedItemColor: Colors.green,
-                    unselectedItemColor: Colors.grey.shade400,
-                    showSelectedLabels: true,
-                    showUnselectedLabels: true,
-                    type: BottomNavigationBarType.fixed,
-                    items: const [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home_rounded),
-                        label: 'Home',
+              bottomNavigationBar: BottomAppBar(
+                shape: const CircularNotchedRectangle(),
+                notchMargin: 8.0,
+                color: Colors.white,
+                elevation: 10,
+                child: SizedBox(
+                  height: 60,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.home_rounded,
+                              color: _currentIndex == 0
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Home',
+                              style: TextStyle(
+                                color: _currentIndex == 0
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: _currentIndex == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.card_giftcard_rounded),
-                        label: 'Rewards',
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 1),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.card_giftcard_rounded,
+                              color: _currentIndex == 1
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Rewards',
+                              style: TextStyle(
+                                color: _currentIndex == 1
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: _currentIndex == 1
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.person_rounded),
-                        label: 'Profile',
+                      const SizedBox(width: 40), // FAB එකට ඉඩ
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 2),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_rounded,
+                              color: _currentIndex == 2
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Profile',
+                              style: TextStyle(
+                                color: _currentIndex == 2
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: _currentIndex == 2
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
