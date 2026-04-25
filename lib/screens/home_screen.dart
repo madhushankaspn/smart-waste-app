@@ -15,26 +15,97 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _lastSavedPoints = -1;
+  String _userArea = "Maharagama Zone"; // මුලින්ම තියෙන Area එක
+  int _currentIndex = 0; // Bottom Nav Bar එකේ දැනට ඉන්න Tab එක
 
   @override
   void initState() {
     super.initState();
-    _loadLastPoints();
+    _loadData(); // App එක ලෝඩ් වෙද්දිම සේව් වෙලා තියෙන Data ගන්නවා
   }
 
-  Future<void> _loadLastPoints() async {
+  // Points සහ Area එක ෆෝන් එකෙන් ලෝඩ් කරන Function එක
+  Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _lastSavedPoints = prefs.getInt('last_points') ?? 0;
+      _userArea = prefs.getString('user_area') ?? "Maharagama Zone";
     });
   }
 
+  // Points අලුත් කරන Function එක
   Future<void> _updateLastPoints(int newPoints) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_points', newPoints);
     _lastSavedPoints = newPoints;
   }
 
+  // Area එක මාරු කරන Function එක
+  Future<void> _changeArea(String newArea) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_area', newArea);
+    setState(() {
+      _userArea = newArea;
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Area updated to $newArea!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  // Area එක තෝරන Dialog එක පෙන්වන Function එක
+  void _showChangeAreaDialog() {
+    List<String> areas = [
+      'Colombo Zone',
+      'Maharagama Zone',
+      'Homagama Zone',
+      'Kaduwela Zone',
+      'Dehiwala Zone',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Select Your Area',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: areas.map((area) {
+            return ListTile(
+              leading: Icon(
+                Icons.location_city,
+                color: _userArea == area ? Colors.green : Colors.grey,
+              ),
+              title: Text(
+                area,
+                style: TextStyle(
+                  fontWeight: _userArea == area
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              trailing: _userArea == area
+                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  : null,
+              onTap: () {
+                Navigator.pop(context);
+                _changeArea(area);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // +1 Point Popup එක
   void _showRewardPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -124,9 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Collect Point >',
                     style: TextStyle(
@@ -148,10 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await FirebaseFirestore.instance.collection('reports').doc(reportId).update(
       {'isRewardClaimed': true},
     );
-
-    if (mounted) {
-      _showRewardPopup(context);
-    }
+    if (mounted) _showRewardPopup(context);
   }
 
   void _showNotificationsSheet(
@@ -175,7 +241,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }
-
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -201,7 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     var doc = unreadNotifications[index];
                     var data = doc.data() as Map<String, dynamic>;
-
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -220,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
-                        'Your report at ${data['location'] ?? 'a location'} was assigned to a team.',
+                        'Your report at ${data['location'] ?? 'a location'} was assigned.',
                       ),
                       trailing: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -426,13 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------------------------------------------
-  // අලුත් කරපු: කුණු එකතු කරන ඊළඟ දවස සහ 'ප්‍රදේශය' පෙන්වන කාඩ් එක
-  // ------------------------------------------------------------------
   Widget _buildNextCollectionCard() {
-    // දැනට යූසර්ගේ ප්‍රදේශය මෙහෙමයි කියලා හිතමු (පස්සේ මේක Profile එකෙන් ගන්න පුළුවන්)
-    String userArea = "Maharagama Zone";
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -450,7 +508,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          // ප්‍රදේශය පෙන්වන කොටස
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -459,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.location_city, size: 16, color: Colors.grey),
                   const SizedBox(width: 8),
                   Text(
-                    'My Area: $userArea',
+                    'My Area: $_userArea',
                     style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 13,
@@ -469,13 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Change area feature coming soon!'),
-                    ),
-                  );
-                },
+                onTap: _showChangeAreaDialog,
                 child: const Text(
                   'Change',
                   style: TextStyle(
@@ -491,7 +542,6 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1, thickness: 1),
           ),
-          // දවස සහ වෙලාව පෙන්වන කොටස
           Row(
             children: [
               Container(
@@ -555,16 +605,173 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.notifications_active_outlined,
                   color: Colors.green,
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Reminder set for tomorrow morning!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reminder set for tomorrow morning!'),
+                    backgroundColor: Colors.green,
+                  ),
+                ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==============================================
+  // TAB 2: අලුතින් හදපු Profile Settings Tab එක
+  // ==============================================
+  Widget _buildProfileTab(
+    String email,
+    int points,
+    String level,
+    Color levelColor,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Profile Picture එක
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: levelColor, width: 3),
+            ),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.grey.shade200,
+              child: Text(
+                email.isNotEmpty ? email[0].toUpperCase() : 'U',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: levelColor,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            email,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: levelColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '$level Member • $points Points',
+              style: TextStyle(
+                color: levelColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+
+          // Settings Options ටික
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Account Settings',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+            color: Colors.white,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.location_on, color: Colors.blue),
+                  ),
+                  title: const Text('My Area'),
+                  subtitle: Text(
+                    _userArea,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  onTap: _showChangeAreaDialog,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.history, color: Colors.orange),
+                  ),
+                  title: const Text('Report History'),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  onTap: () =>
+                      setState(() => _currentIndex = 0), // Home එකට යනවා
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.logout, color: Colors.red),
+                  ),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    if (context.mounted)
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -661,280 +868,301 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      if (context.mounted) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                        );
-                      }
-                    },
-                  ),
                 ],
               ),
-              body: Column(
-                children: [
-                  // 1. Points Card
-                  GestureDetector(
-                    onTap: () => _showRewardsInfo(context, points),
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [levelColor, levelColor.withOpacity(0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: levelColor.withOpacity(0.4),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
+
+              // Bottom Nav Bar එකේ තෝරන Tab එක අනුව පෙන්වන Screen එක වෙනස් වෙනවා
+              body: _currentIndex == 0
+                  ? Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _showRewardsInfo(context, points),
+                          child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  levelColor,
+                                  levelColor.withOpacity(0.7),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: levelColor.withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Icon(
-                              _getLevelIcon(level),
-                              size: 40,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  '$level Level',
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    _getLevelIcon(level),
+                                    size: 40,
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    'Tap to view rewards 🎁',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              const Text(
-                                'Points',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                '$points',
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // 2. අලුතින් එකතු කරපු Collection Schedule Card එක
-                  _buildNextCollectionCard(),
-
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'My Recent Reports',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // 3. Reports List එක
-                  Expanded(
-                    child: myReports.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.inbox, size: 60, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text(
-                                  'You have no reports yet.',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: myReports.length,
-                            itemBuilder: (context, index) {
-                              var report =
-                                  myReports[index].data()
-                                      as Map<String, dynamic>;
-                              String? base64String = report['imageBase64'];
-
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Container(
-                                          width: 70,
-                                          height: 70,
-                                          color: Colors.grey.shade200,
-                                          child:
-                                              base64String != null &&
-                                                  base64String.isNotEmpty
-                                              ? Image.memory(
-                                                  base64Decode(base64String),
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (c, e, s) =>
-                                                      const Icon(
-                                                        Icons.broken_image,
-                                                      ),
-                                                )
-                                              : const Icon(
-                                                  Icons.image_not_supported,
-                                                  color: Colors.grey,
-                                                ),
+                                      Text(
+                                        '$level Level',
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              report['title'] ?? 'No Title',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.location_on,
-                                                  size: 14,
-                                                  color: Colors.grey,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Expanded(
-                                                  child: Text(
-                                                    report['location'] ??
-                                                        'Unknown',
-                                                    style: const TextStyle(
-                                                      fontSize: 13,
-                                                      color: Colors.grey,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    report['status'] ==
-                                                        'Pending'
-                                                    ? Colors.orange.shade50
-                                                    : Colors.green.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                report['status'] ?? 'Pending',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.bold,
-                                                  color:
-                                                      report['status'] ==
-                                                          'Pending'
-                                                      ? Colors.orange.shade800
-                                                      : Colors.green.shade800,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Tap to view rewards 🎁',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              );
-                            },
+                                Column(
+                                  children: [
+                                    const Text(
+                                      'Points',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      '$points',
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                  ),
-                ],
-              ),
-              floatingActionButton: FloatingActionButton.extended(
+                        ),
+                        _buildNextCollectionCard(),
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'My Recent Reports',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: myReports.isEmpty
+                              ? const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.inbox,
+                                        size: 60,
+                                        color: Colors.grey,
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'You have no reports yet.',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  itemCount: myReports.length,
+                                  itemBuilder: (context, index) {
+                                    var report =
+                                        myReports[index].data()
+                                            as Map<String, dynamic>;
+                                    String? base64String =
+                                        report['imageBase64'];
+
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      elevation: 1,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Row(
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Container(
+                                                width: 70,
+                                                height: 70,
+                                                color: Colors.grey.shade200,
+                                                child:
+                                                    base64String != null &&
+                                                        base64String.isNotEmpty
+                                                    ? Image.memory(
+                                                        base64Decode(
+                                                          base64String,
+                                                        ),
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : const Icon(
+                                                        Icons
+                                                            .image_not_supported,
+                                                        color: Colors.grey,
+                                                      ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    report['title'] ??
+                                                        'No Title',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.location_on,
+                                                        size: 14,
+                                                        color: Colors.grey,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Expanded(
+                                                        child: Text(
+                                                          report['location'] ??
+                                                              'Unknown',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 13,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          report['status'] ==
+                                                              'Pending'
+                                                          ? Colors
+                                                                .orange
+                                                                .shade50
+                                                          : Colors
+                                                                .green
+                                                                .shade50,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      report['status'] ??
+                                                          'Pending',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            report['status'] ==
+                                                                'Pending'
+                                                            ? Colors
+                                                                  .orange
+                                                                  .shade800
+                                                            : Colors
+                                                                  .green
+                                                                  .shade800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    )
+                  : _buildProfileTab(
+                      currentUser?.email ?? '',
+                      points,
+                      level,
+                      levelColor,
+                    ),
+
+              // මැදින් තියෙන ලොකු "New Report" Button එක
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+              floatingActionButton: FloatingActionButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -944,10 +1172,82 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 backgroundColor: Colors.green,
-                icon: const Icon(Icons.add_a_photo, color: Colors.white),
-                label: const Text(
-                  'New Report',
-                  style: TextStyle(color: Colors.white),
+                elevation: 4,
+                child: const Icon(
+                  Icons.add_a_photo,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+
+              // Bottom Navigation Bar එක
+              bottomNavigationBar: BottomAppBar(
+                shape: const CircularNotchedRectangle(),
+                notchMargin: 8.0,
+                color: Colors.white,
+                elevation: 10,
+                child: SizedBox(
+                  height: 60,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.home_rounded,
+                              color: _currentIndex == 0
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Home',
+                              style: TextStyle(
+                                color: _currentIndex == 0
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: _currentIndex == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 40), // මැද බොත්තමට ඉඩ තියනවා
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 1),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_rounded,
+                              color: _currentIndex == 1
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Profile',
+                              style: TextStyle(
+                                color: _currentIndex == 1
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 12,
+                                fontWeight: _currentIndex == 1
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
