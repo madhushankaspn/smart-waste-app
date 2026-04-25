@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http; // Search කරන්න මේක ඕනේ
+import 'dart:convert';
 
 class MapPickerScreen extends StatefulWidget {
   const MapPickerScreen({super.key});
@@ -11,51 +13,44 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  // මුලින්ම කොළඹ මැදින් මැප් එක පෙන්වන්න සෙට් කරලා තියෙන්නේ
-  LatLng _currentPosition = const LatLng(6.9271, 79.8612);
-  LatLng? _pickedLocation; // යූසර් තෝරන තැන සේව් කරන්න
+  LatLng _currentPosition = const LatLng(6.9271, 79.8612); // කොළඹ
+  LatLng? _pickedLocation;
   final MapController _mapController = MapController();
+  final TextEditingController _searchController =
+      TextEditingController(); // Search Box එකේ Controller එක
   bool _isLoadingLocation = false;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation(); // ස්ක්‍රීන් එක ආපු ගමන් Phone එකේ ලොකේෂන් එක ගන්නවා
+    _getCurrentLocation();
   }
 
-  // GPS හරහා දැනට ඉන්න තැන හොයාගන්න Function එක
+  // දැනට ඉන්න තැන ගන්න Function එක (කලින් එකමයි)
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
-
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw Exception('Location services are disabled.');
-      }
+      if (!serviceEnabled) throw Exception('Location services are disabled.');
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
+        if (permission == LocationPermission.denied)
           throw Exception('Location permissions are denied');
-        }
       }
-
-      if (permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.deniedForever)
         throw Exception('Location permissions are permanently denied.');
-      }
 
-      // හරියටම ඉන්න තැන ගන්නවා
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
-        _pickedLocation = _currentPosition; // දැනට ඉන්න තැනම තේරුවා කියලා හිතමු
+        _pickedLocation = _currentPosition;
       });
 
-      // මැප් එක ඒ තැනට අරන් යනවා
       _mapController.move(_currentPosition, 15.0);
     } catch (e) {
       if (mounted) {
@@ -68,6 +63,80 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     }
   }
 
+  // ------------------------------------------------------------------------
+  // අලුත් කෑල්ල: නම ගහලා Search කරන Function එක
+  // ------------------------------------------------------------------------
+  Future<void> _searchLocation(String query) async {
+    if (query.trim().isEmpty) return;
+
+    // කියවන්න ලේසි වෙන්න පොඩි ලෝඩින් එකක් පෙන්වනවා
+    setState(() => _isLoadingLocation = true);
+
+    // ෆෝන් එකේ කීබෝඩ් එක පල්ලෙහාට දානවා
+    FocusScope.of(context).unfocus();
+
+    try {
+      // OpenStreetMap API එකට රික්වෙස්ට් එක යවනවා (ලංකාව ඇතුලෙ තැන් වලට ප්‍රමුඛතාවය දෙනවා)
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=1&countrycodes=LK',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {
+          'User-Agent':
+              'SmartWasteApp/1.0', // API එක බ්ලොක් නොවෙන්න මේක යවන්න ඕනේ
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body);
+
+        if (data.isNotEmpty) {
+          // ලොකේෂන් එක හොයාගත්තා නම් ඒක ගන්නවා
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+          final newLocation = LatLng(lat, lon);
+
+          setState(() {
+            _currentPosition = newLocation;
+            _pickedLocation = newLocation; // පින් එකත් එතනටම දානවා
+          });
+
+          // මැප් එක ඒ තැනට අරන් යනවා
+          _mapController.move(newLocation, 15.0);
+        } else {
+          // තැන හොයාගන්න බැරි වුණොත්
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Location not found. Try a different spelling.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error searching location.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoadingLocation = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,10 +144,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         title: const Text('Pick Location'),
         backgroundColor: Colors.green,
         actions: [
-          // Confirm කරලා ඒක Report Screen එකට යවන බොත්තම
           if (_pickedLocation != null)
             IconButton(
-              icon: const Icon(Icons.check),
+              icon: const Icon(Icons.check, size: 30),
               onPressed: () {
                 Navigator.pop(context, _pickedLocation);
               },
@@ -87,26 +155,26 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
       body: Stack(
         children: [
-          // මැප් එක පෙන්වන කොටස
+          // 1. මැප් එක
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _currentPosition,
               initialZoom: 13.0,
-              // මැප් එක Click කරාම ඒ තැන තෝරනවා
               onTap: (tapPosition, point) {
                 setState(() {
                   _pickedLocation = point;
                 });
+                FocusScope.of(
+                  context,
+                ).unfocus(); // මැප් එක එබුවම කීබෝඩ් එක අයින් වෙනවා
               },
             ),
             children: [
-              // Free මැප් එකක් පාවිච්චි කරන්නේ (OpenStreetMap)
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.swm_app',
               ),
-              // පින් එක (Marker එක) පෙන්වන්නේ මෙතනයි
               if (_pickedLocation != null)
                 MarkerLayer(
                   markers: [
@@ -117,7 +185,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                       child: const Icon(
                         Icons.location_on,
                         color: Colors.red,
-                        size: 40,
+                        size: 45,
                       ),
                     ),
                   ],
@@ -125,7 +193,46 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ],
           ),
 
-          // Loading වෙනවා නම් පෙන්වනවා
+          // 2. අලුතින් එකතු කරපු Search Bar එක
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'Search city or street (e.g. Maharagama)',
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search, color: Colors.grey),
+                        ),
+                        // කීබෝඩ් එකේ Enter එබුවමත් Search වෙනවා
+                        onSubmitted: (value) => _searchLocation(value),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward,
+                        color: Colors.green,
+                      ),
+                      onPressed: () => _searchLocation(_searchController.text),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Loading Indicator එක
           if (_isLoadingLocation)
             const Center(
               child: Card(
@@ -136,14 +243,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     children: [
                       CircularProgressIndicator(color: Colors.green),
                       SizedBox(height: 16),
-                      Text('Finding your location...'),
+                      Text('Searching...'),
                     ],
                   ),
                 ),
               ),
             ),
 
-          // මැප් එක Click කරන්න කියන උපදෙස
+          // 4. Instructions
           Positioned(
             bottom: 24,
             left: 24,
@@ -153,7 +260,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               child: const Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Text(
-                  'Tap anywhere on the map to place the pin, then click the Check mark (✓) at the top right.',
+                  'Search a location or tap anywhere on the map to place the pin.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -162,7 +269,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ),
         ],
       ),
-      // ආයෙත් Current Location එක ගන්න බොත්තම
+      // GPS බොත්තම
       floatingActionButton: FloatingActionButton(
         onPressed: _getCurrentLocation,
         backgroundColor: Colors.white,
