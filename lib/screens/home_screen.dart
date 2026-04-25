@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _lastSavedPoints = -1;
   String _userArea = "Maharagama Zone";
-  int _currentIndex = 0;
+  int _currentIndex = 0; // 0=Home, 1=Rewards, 2=Leaderboard, 3=Profile
 
   @override
   void initState() {
@@ -324,160 +324,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showRewardsInfo(BuildContext context, int currentPoints) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Your Rewards Journey',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'You currently have $currentPoints Points',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildRewardCard(
-              title: 'Platinum Level',
-              points: '1000 Points',
-              subtitle: '50% OFF Dinner at Cinnamon Grand Colombo',
-              icon: Icons.diamond,
-              color: Colors.deepPurple,
-              isUnlocked: currentPoints >= 1000,
-            ),
-            _buildRewardCard(
-              title: 'Gold Level',
-              points: '500 Points',
-              subtitle: 'Priority Report Verification & VIP Status',
-              icon: Icons.emoji_events,
-              color: Colors.amber.shade700,
-              isUnlocked: currentPoints >= 500,
-            ),
-            _buildRewardCard(
-              title: 'Silver Level',
-              points: '100 Points',
-              subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
-              icon: Icons.workspace_premium,
-              color: Colors.blueGrey,
-              isUnlocked: currentPoints >= 100,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Got it! Keep Reporting',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRewardCard({
-    required String title,
-    required String points,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required bool isUnlocked,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
-        border: Border.all(
-          color: isUnlocked ? color : Colors.grey.shade300,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isUnlocked ? color : Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? color : Colors.grey.shade600,
-                      ),
-                    ),
-                    Text(
-                      points,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                ),
-              ],
-            ),
-          ),
-          if (isUnlocked) const Icon(Icons.check_circle, color: Colors.green),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNextCollectionCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -602,6 +448,75 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRewardCard({
+    required String title,
+    required String points,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool isUnlocked,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
+        border: Border.all(
+          color: isUnlocked ? color : Colors.grey.shade300,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isUnlocked ? color : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? color : Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      points,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                ),
+              ],
+            ),
+          ),
+          if (isUnlocked) const Icon(Icons.check_circle, color: Colors.green),
         ],
       ),
     );
@@ -759,7 +674,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // අලුත් Stat Card Widget එක (Profile එකට)
   Widget _buildStatCard(
     String title,
     String value,
@@ -807,9 +721,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==============================================
-  // TAB 3: අලුත් ලස්සන "Profile" Tab එක
-  // ==============================================
   Widget _buildProfileTab(
     String email,
     int points,
@@ -819,7 +730,6 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Stack(
       children: [
-        // 1. උඩින් තියෙන ලස්සන Curved Background එක
         Container(
           height: 200,
           decoration: BoxDecoration(
@@ -841,7 +751,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
         SingleChildScrollView(
           padding: const EdgeInsets.only(
             top: 80,
@@ -851,7 +760,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Column(
             children: [
-              // 2. Profile Picture එක
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(
@@ -888,8 +796,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // 3. Level Badge එක
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -917,8 +823,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // 4. අලුතින් දාපු Stats Row එක
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -939,12 +843,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     '${(totalReports * 2.5).toStringAsFixed(1)} kg',
                     Icons.eco,
                     Colors.green,
-                  ), // නිකන් දළ අගයක් පෙන්වන්නේ
+                  ),
                 ],
               ),
               const SizedBox(height: 32),
-
-              // 5. ලස්සන කරපු Settings කාඩ් එක
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -1100,6 +1002,198 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ==============================================
+  // TAB 4: අලුතින්ම හදපු "Leaderboard" Tab එක
+  // ==============================================
+  Widget _buildLeaderboardTab(String currentUserId) {
+    return Column(
+      children: [
+        // උඩින් තියෙන ලස්සන Gradient Header එක
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(
+            top: 40,
+            left: 20,
+            right: 20,
+            bottom: 30,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade700, Colors.green.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.emoji_events, size: 70, color: Colors.yellow),
+              SizedBox(height: 10),
+              Text(
+                "Leaderboard",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Top Eco-Warriors in the City",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+
+        // පහළින් එන Users ලිස්ට් එක (Points වැඩිම කෙනාගෙ ඉඳන්)
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .orderBy('points', descending: true)
+                .limit(50)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.green),
+                );
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                return const Center(
+                  child: Text(
+                    "No users found.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+
+              var users = snapshot.data!.docs;
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  var userDoc = users[index];
+                  var userData = userDoc.data() as Map<String, dynamic>;
+
+                  int points = userData['points'] ?? 0;
+                  String email = userData['email'] ?? 'Eco Hero';
+                  String userName = email.split(
+                    '@',
+                  )[0]; // නම විදිහට Email එකේ මුල් කෑල්ල ගන්නවා
+                  bool isCurrentUser =
+                      userDoc.id ==
+                      currentUserId; // මේ තමන්ගේ Profile එකද කියලා බලනවා
+
+                  // මුල් තුන්දෙනාට වෙනම පාට දෙනවා
+                  Color rankColor = Colors.grey.shade400;
+                  IconData rankIcon = Icons.military_tech;
+                  if (index == 0) {
+                    rankColor = Colors.amber;
+                    rankIcon = Icons.workspace_premium;
+                  } // රන්
+                  else if (index == 1) {
+                    rankColor = Colors.grey.shade400;
+                    rankIcon = Icons.workspace_premium;
+                  } // රිදී
+                  else if (index == 2) {
+                    rankColor = Colors.brown.shade300;
+                    rankIcon = Icons.workspace_premium;
+                  } // ලෝකඩ
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: isCurrentUser ? 4 : 1, // තමන්ගෙ එක කැපිලා පේන්න
+                    color: isCurrentUser ? Colors.green.shade50 : Colors.white,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Rank Number එක
+                          Text(
+                            '#${index + 1}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: index < 3 ? rankColor : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Avatar එක
+                          CircleAvatar(
+                            backgroundColor: index < 3
+                                ? rankColor.withOpacity(0.2)
+                                : Colors.grey.shade100,
+                            child: index < 3
+                                ? Icon(rankIcon, color: rankColor)
+                                : Text(
+                                    userName[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                      title: Text(
+                        isCurrentUser ? "You ($userName)" : userName,
+                        style: TextStyle(
+                          fontWeight: isCurrentUser
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '$points pts',
+                          style: TextStyle(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 40), // FAB එකට ඉඩ තියනවා
+      ],
+    );
+  }
+
+  // ==============================================
+  // ප්‍රධාන Build Function එක
+  // ==============================================
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -1142,65 +1236,70 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
-              appBar: AppBar(
-                title: const Text(
-                  'Smart Waste',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                backgroundColor: _currentIndex == 2
-                    ? levelColor
-                    : Colors
-                          .green, // Profile එකේදි උඩ පාටත් level පාටටම හැරෙනවා
-                elevation: 0,
-                actions: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
+              appBar: _currentIndex == 2
+                  ? null
+                  : AppBar(
+                      // Leaderboard එකේදි උඩින් Appbar එක පෙන්නන්නේ නෑ ලස්සන වෙන්න
+                      title: const Text(
+                        'Smart Waste',
+                        style: TextStyle(
                           color: Colors.white,
-                          size: 28,
-                        ),
-                        onPressed: () => _showNotificationsSheet(
-                          context,
-                          unreadNotifications,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (unreadNotifications.isNotEmpty)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${unreadNotifications.length}',
-                              style: const TextStyle(
+                      backgroundColor: _currentIndex == 3
+                          ? levelColor
+                          : Colors.green,
+                      elevation: 0,
+                      actions: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications,
                                 color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                size: 28,
+                              ),
+                              onPressed: () => _showNotificationsSheet(
+                                context,
+                                unreadNotifications,
                               ),
                             ),
-                          ),
+                            if (unreadNotifications.isNotEmpty)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${unreadNotifications.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                ],
-              ),
+                      ],
+                    ),
 
+              // 0=Home, 1=Rewards, 2=Leaderboard, 3=Profile
               body: _currentIndex == 0
                   ? Column(
                       children: [
                         GestureDetector(
-                          onTap: () => setState(() => _currentIndex = 1),
+                          onTap: () => setState(
+                            () => _currentIndex = 1,
+                          ), // Rewards වලට යනවා
                           child: Container(
                             width: double.infinity,
                             margin: const EdgeInsets.all(16),
@@ -1477,6 +1576,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : _currentIndex == 1
                   ? _buildRewardsTab(points, level, levelColor)
+                  : _currentIndex == 2
+                  ? _buildLeaderboardTab(
+                      currentUser?.uid ?? '',
+                    ) // Leaderboard එක මෙතන
                   : _buildProfileTab(
                       currentUser?.email ?? '',
                       points,
@@ -1505,6 +1608,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+              // -------------------------------------------------------------------
+              // දැන් Bottom Navigation Bar එක 100% ක්ම Balance වෙලා තියෙන්නේ
+              // -------------------------------------------------------------------
               bottomNavigationBar: BottomAppBar(
                 shape: const CircularNotchedRectangle(),
                 notchMargin: 8.0,
@@ -1515,6 +1621,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      // වම් පැත්තේ Buttons 2
                       MaterialButton(
                         minWidth: 40,
                         onPressed: () => setState(() => _currentIndex = 0),
@@ -1533,7 +1640,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: _currentIndex == 0
                                     ? Colors.green
                                     : Colors.grey,
-                                fontSize: 12,
+                                fontSize: 10,
                                 fontWeight: _currentIndex == 0
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -1560,7 +1667,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: _currentIndex == 1
                                     ? Colors.green
                                     : Colors.grey,
-                                fontSize: 12,
+                                fontSize: 10,
                                 fontWeight: _currentIndex == 1
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -1569,7 +1676,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 40), // FAB එකට ඉඩ
+
+                      const SizedBox(width: 40), // මැද බොත්තමට (FAB) ඉඩ
+                      // දකුණු පැත්තේ Buttons 2
                       MaterialButton(
                         minWidth: 40,
                         onPressed: () => setState(() => _currentIndex = 2),
@@ -1577,19 +1686,46 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.person_rounded,
+                              Icons.leaderboard_rounded,
                               color: _currentIndex == 2
+                                  ? Colors.green
+                                  : Colors.grey,
+                            ),
+                            Text(
+                              'Top 50',
+                              style: TextStyle(
+                                color: _currentIndex == 2
+                                    ? Colors.green
+                                    : Colors.grey,
+                                fontSize: 10,
+                                fontWeight: _currentIndex == 2
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      MaterialButton(
+                        minWidth: 40,
+                        onPressed: () => setState(() => _currentIndex = 3),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_rounded,
+                              color: _currentIndex == 3
                                   ? Colors.green
                                   : Colors.grey,
                             ),
                             Text(
                               'Profile',
                               style: TextStyle(
-                                color: _currentIndex == 2
+                                color: _currentIndex == 3
                                     ? Colors.green
                                     : Colors.grey,
-                                fontSize: 12,
-                                fontWeight: _currentIndex == 2
+                                fontSize: 10,
+                                fontWeight: _currentIndex == 3
                                     ? FontWeight.bold
                                     : FontWeight.normal,
                               ),
