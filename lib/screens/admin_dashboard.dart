@@ -17,42 +17,52 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String _selectedFilter = 'All';
   int _currentIndex = 0;
 
-  // --- Team Assign කරන Function එක ---
+  // ------------------------------------------------------------------
+  // අලුත් කරපු Team Assign Function එක (අලුත් යූසර්ලාටත් Points ලැබෙන විදිහට)
+  // ------------------------------------------------------------------
   Future<void> _assignTeam(
     BuildContext context,
     String reportId,
     String reportUserId,
+    String userEmail,
     String teamName,
   ) async {
     try {
+      // 1. රිපෝට් එක Update කරනවා
       await FirebaseFirestore.instance
           .collection('reports')
           .doc(reportId)
           .update({'status': 'Assigned', 'assignedTeam': teamName});
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+      // 2. යූසර්ගේ Profile එක අරන් බලනවා
+      DocumentReference userRef = FirebaseFirestore.instance
           .collection('users')
-          .doc(reportUserId)
-          .get();
+          .doc(reportUserId);
+      DocumentSnapshot userDoc = await userRef.get();
 
+      int currentPoints = 0;
       if (userDoc.exists && userDoc.data() != null) {
         var data = userDoc.data() as Map<String, dynamic>;
-        int currentPoints = data['points'] ?? 0;
-        int newPoints = currentPoints + 1;
-        String newLevel = 'Bronze';
-
-        if (newPoints >= 1000)
-          newLevel = 'Platinum';
-        else if (newPoints >= 500)
-          newLevel = 'Gold';
-        else if (newPoints >= 100)
-          newLevel = 'Silver';
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(reportUserId)
-            .update({'points': newPoints, 'level': newLevel});
+        currentPoints = data['points'] ?? 0;
       }
+
+      // Point එකතු කරනවා
+      int newPoints = currentPoints + 1;
+      String newLevel = 'Bronze';
+
+      if (newPoints >= 1000)
+        newLevel = 'Platinum';
+      else if (newPoints >= 500)
+        newLevel = 'Gold';
+      else if (newPoints >= 100)
+        newLevel = 'Silver';
+
+      // 3. .set(merge: true) පාවිච්චි කරලා Profile එක නැත්නම් අලුතින් හදලා Points දෙනවා!
+      await userRef.set({
+        'points': newPoints,
+        'level': newLevel,
+        'email': userEmail, // අලුත් යූසර්ගේ Email එකත් සේව් කරගන්නවා
+      }, SetOptions(merge: true));
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -76,6 +86,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     BuildContext context,
     String reportId,
     String reportUserId,
+    String userEmail,
   ) {
     showDialog(
       context: context,
@@ -111,7 +122,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _assignTeam(context, reportId, reportUserId, team);
+                    _assignTeam(
+                      context,
+                      reportId,
+                      reportUserId,
+                      userEmail,
+                      team,
+                    );
                   },
                 );
               }).toList(),
@@ -232,7 +249,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                   onPressed: () {
                     Navigator.pop(context);
-                    _showAssignDialog(context, docId, report['userId']);
+                    _showAssignDialog(
+                      context,
+                      docId,
+                      report['userId'],
+                      report['userEmail'] ?? 'Unknown',
+                    );
                   },
                   child: const Text(
                     'Assign Collection Team',
@@ -251,7 +273,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // TAB 1: සාමාන්‍ය Reports List එක
+  // TAB 1: Reports List එක
   // ==========================================
   Widget _buildReportsTab() {
     return Column(
@@ -580,6 +602,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   context,
                                   document.id,
                                   report['userId'],
+                                  report['userEmail'] ?? 'Unknown',
                                 ),
                                 child: const Text(
                                   'Assign Collection Team',
@@ -754,7 +777,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // TAB 3: අලුත් කරපු ලස්සන "Teams" Tab එක
+  // TAB 3: Teams Tab එක
   // ==========================================
   Widget _buildTeamsTab() {
     List<String> teamNames = [
@@ -780,7 +803,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           'Team Gamma (Truck 3)': 0,
         };
 
-        int totalTasks = 0; // මුළු වැඩ ගාණ
+        int totalTasks = 0;
 
         for (var doc in snapshot.data!.docs) {
           var data = doc.data() as Map<String, dynamic>;
@@ -794,7 +817,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. උඩින්ම තියෙන අලුත් Overview Card එක
             Container(
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(20),
@@ -886,7 +908,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ),
 
-            // 2. ලස්සන කරපු Teams Cards ටික
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -894,10 +915,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 itemBuilder: (context, index) {
                   String teamName = teamNames[index];
                   int tasks = teamWorkload[teamName] ?? 0;
-
-                  bool isBusy = tasks > 3; // වැඩ 3 කට වඩා තියෙනවා නම් Busy
-
-                  // Progress Bar එකට අගය හදනවා (උපරිම වැඩ 5ක් කියලා හිතමු)
+                  bool isBusy = tasks > 3;
                   double progress = tasks / 5.0;
                   if (progress > 1.0) progress = 1.0;
 
@@ -920,7 +938,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           Row(
                             children: [
-                              // Truck Icon එක
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
@@ -936,7 +953,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              // Team නම සහ Status එක
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -976,7 +992,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   ],
                                 ),
                               ),
-                              // Task ගාණ
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
@@ -1014,7 +1029,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          // අලුතින් දාපු Progress Bar එක
                           Row(
                             children: [
                               const Text(
@@ -1106,7 +1120,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           : _currentIndex == 1
           ? _buildLiveMapTab()
           : _currentIndex == 2
-          ? _buildTeamsTab() // 3 වෙනි Tab එකට ගියාම අලුත් කෑල්ල පෙන්වනවා
+          ? _buildTeamsTab()
           : const Center(
               child: Text(
                 'Settings Coming Soon...',
