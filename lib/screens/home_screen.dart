@@ -16,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _lastSavedPoints = -1;
   String _userArea = "Maharagama Zone";
-  int _currentIndex = 0; // 0=Home, 1=Rewards, 2=Leaderboard, 3=Profile
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -1002,13 +1002,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==============================================
-  // TAB 4: අලුතින්ම හදපු "Leaderboard" Tab එක
-  // ==============================================
   Widget _buildLeaderboardTab(String currentUserId) {
     return Column(
       children: [
-        // උඩින් තියෙන ලස්සන Gradient Header එක
         Container(
           width: double.infinity,
           padding: const EdgeInsets.only(
@@ -1056,7 +1052,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        // පහළින් එන Users ලිස්ට් එක (Points වැඩිම කෙනාගෙ ඉඳන්)
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -1088,35 +1083,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   int points = userData['points'] ?? 0;
                   String email = userData['email'] ?? 'Eco Hero';
-                  String userName = email.split(
-                    '@',
-                  )[0]; // නම විදිහට Email එකේ මුල් කෑල්ල ගන්නවා
-                  bool isCurrentUser =
-                      userDoc.id ==
-                      currentUserId; // මේ තමන්ගේ Profile එකද කියලා බලනවා
+                  String userName = email.split('@')[0];
+                  bool isCurrentUser = userDoc.id == currentUserId;
 
-                  // මුල් තුන්දෙනාට වෙනම පාට දෙනවා
                   Color rankColor = Colors.grey.shade400;
                   IconData rankIcon = Icons.military_tech;
                   if (index == 0) {
                     rankColor = Colors.amber;
                     rankIcon = Icons.workspace_premium;
-                  } // රන්
-                  else if (index == 1) {
+                  } else if (index == 1) {
                     rankColor = Colors.grey.shade400;
                     rankIcon = Icons.workspace_premium;
-                  } // රිදී
-                  else if (index == 2) {
+                  } else if (index == 2) {
                     rankColor = Colors.brown.shade300;
                     rankIcon = Icons.workspace_premium;
-                  } // ලෝකඩ
+                  }
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: isCurrentUser ? 4 : 1, // තමන්ගෙ එක කැපිලා පේන්න
+                    elevation: isCurrentUser ? 4 : 1,
                     color: isCurrentUser ? Colors.green.shade50 : Colors.white,
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
@@ -1126,7 +1114,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       leading: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Rank Number එක
                           Text(
                             '#${index + 1}',
                             style: TextStyle(
@@ -1136,7 +1123,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Avatar එක
                           CircleAvatar(
                             backgroundColor: index < 3
                                 ? rankColor.withOpacity(0.2)
@@ -1186,14 +1172,11 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
-        const SizedBox(height: 40), // FAB එකට ඉඩ තියනවා
+        const SizedBox(height: 40),
       ],
     );
   }
 
-  // ==============================================
-  // ප්‍රධාන Build Function එක
-  // ==============================================
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -1218,10 +1201,19 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-            var userData = userSnapshot.data!.data() as Map<String, dynamic>;
+            // --------------------------------------------------------------------------
+            // අලුතින් වෙනස් කරපු කොටස (Error එක හදන්න) - මෙතන තමයි Fix එක තියෙන්නේ
+            // --------------------------------------------------------------------------
+            Map<String, dynamic> userData = {};
+            if (userSnapshot.data!.exists &&
+                userSnapshot.data!.data() != null) {
+              userData = userSnapshot.data!.data() as Map<String, dynamic>;
+            }
+
             int points = userData['points'] ?? 0;
             String level = userData['level'] ?? 'Bronze';
             Color levelColor = _getLevelColor(level);
+            // --------------------------------------------------------------------------
 
             var myReports = reportsSnapshot.data!.docs.where((doc) {
               var data = doc.data() as Map<String, dynamic>;
@@ -1239,7 +1231,6 @@ class _HomeScreenState extends State<HomeScreen> {
               appBar: _currentIndex == 2
                   ? null
                   : AppBar(
-                      // Leaderboard එකේදි උඩින් Appbar එක පෙන්නන්නේ නෑ ලස්සන වෙන්න
                       title: const Text(
                         'Smart Waste',
                         style: TextStyle(
@@ -1292,14 +1283,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
 
-              // 0=Home, 1=Rewards, 2=Leaderboard, 3=Profile
               body: _currentIndex == 0
                   ? Column(
                       children: [
                         GestureDetector(
-                          onTap: () => setState(
-                            () => _currentIndex = 1,
-                          ), // Rewards වලට යනවා
+                          onTap: () => setState(() => _currentIndex = 1),
                           child: Container(
                             width: double.infinity,
                             margin: const EdgeInsets.all(16),
@@ -1577,9 +1565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   : _currentIndex == 1
                   ? _buildRewardsTab(points, level, levelColor)
                   : _currentIndex == 2
-                  ? _buildLeaderboardTab(
-                      currentUser?.uid ?? '',
-                    ) // Leaderboard එක මෙතන
+                  ? _buildLeaderboardTab(currentUser?.uid ?? '')
                   : _buildProfileTab(
                       currentUser?.email ?? '',
                       points,
@@ -1608,9 +1594,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // -------------------------------------------------------------------
-              // දැන් Bottom Navigation Bar එක 100% ක්ම Balance වෙලා තියෙන්නේ
-              // -------------------------------------------------------------------
               bottomNavigationBar: BottomAppBar(
                 shape: const CircularNotchedRectangle(),
                 notchMargin: 8.0,
@@ -1621,7 +1604,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // වම් පැත්තේ Buttons 2
                       MaterialButton(
                         minWidth: 40,
                         onPressed: () => setState(() => _currentIndex = 0),
@@ -1677,8 +1659,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
-                      const SizedBox(width: 40), // මැද බොත්තමට (FAB) ඉඩ
-                      // දකුණු පැත්තේ Buttons 2
+                      const SizedBox(width: 40),
+
                       MaterialButton(
                         minWidth: 40,
                         onPressed: () => setState(() => _currentIndex = 2),
