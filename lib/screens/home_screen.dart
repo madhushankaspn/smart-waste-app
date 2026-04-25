@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'login_screen.dart';
 import 'report_screen.dart';
@@ -13,7 +14,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // +1 Point Popup එක (ඔයා අර එවපු ලස්සන ඩිසයින් එක)
+  int _lastSavedPoints = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastPoints();
+  }
+
+  Future<void> _loadLastPoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _lastSavedPoints = prefs.getInt('last_points') ?? 0;
+    });
+  }
+
+  Future<void> _updateLastPoints(int newPoints) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_points', newPoints);
+    _lastSavedPoints = newPoints;
+  }
+
   void _showRewardPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -123,20 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Notification එකක් Click කරාම Point එක Claim කරන Function එක
   Future<void> _claimPoint(String reportId) async {
-    // Database එකේ මේ රිපෝට් එක 'Claimed' (තෑග්ග ගත්තා) කියලා සේව් කරනවා
     await FirebaseFirestore.instance.collection('reports').doc(reportId).update(
       {'isRewardClaimed': true},
     );
 
-    // ඊට පස්සේ ලස්සන Popup එක පෙන්වනවා
     if (mounted) {
       _showRewardPopup(context);
     }
   }
 
-  // Notification ලිස්ට් එක පෙන්වන Bottom Sheet එක
   void _showNotificationsSheet(
     BuildContext context,
     List<QueryDocumentSnapshot> unreadNotifications,
@@ -211,8 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           foregroundColor: Colors.white,
                         ),
                         onPressed: () {
-                          Navigator.pop(context); // Sheet එක වහනවා
-                          _claimPoint(doc.id); // තෑග්ග දෙනවා
+                          Navigator.pop(context);
+                          _claimPoint(doc.id);
                         },
                         child: const Text('Claim Point'),
                       ),
@@ -254,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showRewardsInfo(BuildContext context, int currentPoints) {
-    // ... (අර කලින් තිබුණු Rewards Info පෙන්වන කෑල්ලමයි, වෙනසක් නෑ) ...
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -410,11 +426,106 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ------------------------------------------------------------------
+  // අලුත් කෑල්ල: කුණු එකතු කරන ඊළඟ දවස පෙන්වන කාඩ් එක
+  // ------------------------------------------------------------------
+  Widget _buildNextCollectionCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.calendar_month,
+              color: Colors.green,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Next Garbage Collection',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Tomorrow, 08:00 AM',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.recycling,
+                      size: 14,
+                      color: Colors.green.shade700,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Plastic & Paper',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.notifications_active_outlined,
+              color: Colors.green,
+            ),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Reminder set for tomorrow morning!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
-    // මෙතන Streams දෙකම (User ගේ සහ Reports වල) එකට අරන් තියෙනවා
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -427,7 +538,6 @@ class _HomeScreenState extends State<HomeScreen> {
               .orderBy('timestamp', descending: true)
               .snapshots(),
           builder: (context, reportsSnapshot) {
-            // Data එනකන් Loading පෙන්නනවා
             if (!userSnapshot.hasData || !reportsSnapshot.hasData) {
               return const Scaffold(
                 body: Center(
@@ -441,15 +551,11 @@ class _HomeScreenState extends State<HomeScreen> {
             String level = userData['level'] ?? 'Bronze';
             Color levelColor = _getLevelColor(level);
 
-            // තමන්ගේ Reports ටික වෙන් කරගන්නවා
             var myReports = reportsSnapshot.data!.docs.where((doc) {
               var data = doc.data() as Map<String, dynamic>;
               return data['userId'] == currentUser?.uid;
             }).toList();
 
-            // -------------------------------------------------------------
-            // Unread Notifications වෙන් කරගන්නවා (Assigned වෙලා, හැබැයි තවම Point එක Claim කරලා නැති ඒවා)
-            // -------------------------------------------------------------
             var unreadNotifications = myReports.where((doc) {
               var data = doc.data() as Map<String, dynamic>;
               return data['status'] == 'Assigned' &&
@@ -457,16 +563,19 @@ class _HomeScreenState extends State<HomeScreen> {
             }).toList();
 
             return Scaffold(
-              backgroundColor: Colors.grey.shade100,
+              backgroundColor: Colors.grey.shade50,
               appBar: AppBar(
                 title: const Text(
                   'Smart Waste',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 backgroundColor: Colors.green,
                 elevation: 0,
                 actions: [
-                  // --- Notification Bell එක ---
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -481,7 +590,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           unreadNotifications,
                         ),
                       ),
-                      // අලුත් ඒවා තියෙනවා නම් රතු පාටින් ගාණ පෙන්නනවා
                       if (unreadNotifications.isNotEmpty)
                         Positioned(
                           right: 8,
@@ -504,7 +612,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                     ],
                   ),
-                  // --- Logout Button ---
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.white),
                     onPressed: () async {
@@ -523,7 +630,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               body: Column(
                 children: [
-                  // Points සහ Level එක පෙන්වන කොටස
+                  // 1. Points Card
                   GestureDetector(
                     onTap: () => _showRewardsInfo(context, points),
                     child: Container(
@@ -617,7 +724,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // තමන්ගේ Reports List එක
+                  // 2. අලුතින් එකතු කරපු Collection Schedule Card එක
+                  _buildNextCollectionCard(),
+
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'My Recent Reports',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 3. Reports List එක
                   Expanded(
                     child: myReports.isEmpty
                         ? const Center(
@@ -646,22 +771,22 @@ class _HomeScreenState extends State<HomeScreen> {
                               String? base64String = report['imageBase64'];
 
                               return Card(
-                                margin: const EdgeInsets.only(bottom: 16),
+                                margin: const EdgeInsets.only(bottom: 12),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                elevation: 2,
+                                elevation: 1,
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                        CrossAxisAlignment.center,
                                     children: [
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12),
                                         child: Container(
-                                          width: 80,
-                                          height: 80,
+                                          width: 70,
+                                          height: 70,
                                           color: Colors.grey.shade200,
                                           child:
                                               base64String != null &&
@@ -730,15 +855,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 color:
                                                     report['status'] ==
                                                         'Pending'
-                                                    ? Colors.orange.shade100
-                                                    : Colors.green.shade100,
+                                                    ? Colors.orange.shade50
+                                                    : Colors.green.shade50,
                                                 borderRadius:
-                                                    BorderRadius.circular(12),
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 report['status'] ?? 'Pending',
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 11,
                                                   fontWeight: FontWeight.bold,
                                                   color:
                                                       report['status'] ==
