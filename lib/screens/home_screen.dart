@@ -427,9 +427,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ------------------------------------------------------------------
-  // අලුත් කෑල්ල: කුණු එකතු කරන ඊළඟ දවස පෙන්වන කාඩ් එක
+  // අලුත් කරපු: කුණු එකතු කරන ඊළඟ දවස සහ 'ප්‍රදේශය' පෙන්වන කාඩ් එක
   // ------------------------------------------------------------------
   Widget _buildNextCollectionCard() {
+    // දැනට යූසර්ගේ ප්‍රදේශය මෙහෙමයි කියලා හිතමු (පස්සේ මේක Profile එකෙන් ගන්න පුළුවන්)
+    String userArea = "Maharagama Zone";
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -445,77 +448,123 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.calendar_month,
-              color: Colors.green,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Next Garbage Collection',
+          // ප්‍රදේශය පෙන්වන කොටස
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.location_city, size: 16, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    'My Area: $userArea',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Change area feature coming soon!'),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Change',
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Colors.green,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Tomorrow, 08:00 AM',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1, thickness: 1),
+          ),
+          // දවස සහ වෙලාව පෙන්වන කොටස
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 4),
-                Row(
+                child: const Icon(
+                  Icons.calendar_month,
+                  color: Colors.green,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.recycling,
-                      size: 14,
-                      color: Colors.green.shade700,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Plastic & Paper',
+                    const Text(
+                      'Next Garbage Collection',
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: Colors.grey,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tomorrow, 08:00 AM',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.recycling,
+                          size: 14,
+                          color: Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Plastic & Paper',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_active_outlined,
-              color: Colors.green,
-            ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Reminder set for tomorrow morning!'),
-                  backgroundColor: Colors.green,
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: Colors.green,
                 ),
-              );
-            },
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Reminder set for tomorrow morning!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
