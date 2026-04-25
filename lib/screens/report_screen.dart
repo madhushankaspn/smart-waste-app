@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart'; // මේක අලුතින් ඕ�
 import 'dart:typed_data';
 import 'dart:convert';
 import 'map_picker_screen.dart'; // මැප් එක තියෙන ෆයිල් එක
+import 'package:geolocator/geolocator.dart'; // දුර මනින්න මේක ඕනේ
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
