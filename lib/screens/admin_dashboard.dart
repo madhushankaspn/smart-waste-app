@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'login_screen.dart';
 
@@ -17,9 +18,105 @@ class _AdminDashboardState extends State<AdminDashboard> {
   String _selectedFilter = 'All';
   int _currentIndex = 0;
 
-  // ------------------------------------------------------------------
-  // Team Assign කරන Function එක
-  // ------------------------------------------------------------------
+  List<String> _teamNames = [
+    'Team Alpha (Truck 1)',
+    'Team Beta (Truck 2)',
+    'Team Gamma (Truck 3)',
+  ];
+
+  // Settings වලට ඕන කරන Variables
+  bool _pushNotifications = true;
+  bool _autoAssign = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTeams();
+  }
+
+  Future<void> _loadTeams() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? savedTeams = prefs.getStringList('admin_teams');
+    if (savedTeams != null && savedTeams.isNotEmpty) {
+      setState(() {
+        _teamNames = savedTeams;
+      });
+    }
+  }
+
+  Future<void> _addNewTeam(String teamName) async {
+    setState(() {
+      _teamNames.add(teamName);
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('admin_teams', _teamNames);
+  }
+
+  void _showAddTeamDialog() {
+    TextEditingController teamController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.local_shipping, color: Colors.green),
+            SizedBox(width: 10),
+            Text(
+              'Add New Truck',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: TextField(
+          controller: teamController,
+          decoration: InputDecoration(
+            hintText: "E.g., Team Delta (Truck 4)",
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              if (teamController.text.trim().isNotEmpty) {
+                _addNewTeam(teamController.text.trim());
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('New team added!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Add Team',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _assignTeam(
     BuildContext context,
     String reportId,
@@ -60,109 +157,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
         'email': userEmail,
       }, SetOptions(merge: true));
 
-      if (context.mounted) {
+      if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Team Assigned & Point Awarded!'),
             backgroundColor: Colors.green,
           ),
         );
-      }
     } catch (e) {
-      if (context.mounted) {
+      if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
-      }
     }
   }
 
-  // ------------------------------------------------------------------
-  // අලුතින් එකතු කරපු: Report එක Reject කරන Function එක
-  // ------------------------------------------------------------------
   Future<void> _rejectReport(BuildContext context, String reportId) async {
     try {
       await FirebaseFirestore.instance
           .collection('reports')
           .doc(reportId)
           .update({'status': 'Rejected'});
-
-      if (context.mounted) {
+      if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Report Rejected!'),
             backgroundColor: Colors.redAccent,
           ),
         );
-      }
     } catch (e) {
-      if (context.mounted) {
+      if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
-      }
     }
   }
 
-  // --- Assign Dialog එක ---
-  void _showAssignDialog(
-    BuildContext context,
-    String reportId,
-    String reportUserId,
-    String userEmail,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Assign Collection Team',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children:
-              [
-                'Team Alpha (Truck 1)',
-                'Team Beta (Truck 2)',
-                'Team Gamma (Truck 3)',
-              ].map((team) {
-                return ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.local_shipping,
-                      color: Colors.green,
-                    ),
-                  ),
-                  title: Text(
-                    team,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _assignTeam(
-                      context,
-                      reportId,
-                      reportUserId,
-                      userEmail,
-                      team,
-                    );
-                  },
-                );
-              }).toList(),
-        ),
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // අලුතින් එකතු කරපු: Reject කරන්න කලින් අහන Warning Dialog එක
-  // ------------------------------------------------------------------
   void _showRejectDialog(BuildContext context, String reportId) {
     showDialog(
       context: context,
@@ -210,7 +240,52 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // --- Map එකේ Pin එක එබුවම පෙන්වන විස්තර කාඩ් එක ---
+  void _showAssignDialog(
+    BuildContext context,
+    String reportId,
+    String reportUserId,
+    String userEmail,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Assign Collection Team',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _teamNames.length,
+            itemBuilder: (context, index) {
+              String team = _teamNames[index];
+              return ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.local_shipping, color: Colors.green),
+                ),
+                title: Text(
+                  team,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _assignTeam(context, reportId, reportUserId, userEmail, team);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showMapReportDetails(
     BuildContext context,
     Map<String, dynamic> report,
@@ -319,6 +394,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Row(
                 children: [
                   Expanded(
+                    flex: 1,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
@@ -377,7 +453,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // TAB 1: Reports List එක
+  // TAB 1: Reports List
   // ==========================================
   Widget _buildReportsTab() {
     return Column(
@@ -453,7 +529,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ),
 
-        // අලුතින් 'Rejected' Filter එක දාලා තියෙනවා
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: SingleChildScrollView(
@@ -476,7 +551,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     selected: isSelected,
                     selectedColor: filter == 'Rejected'
                         ? Colors.redAccent
-                        : Colors.green, // Reject එක තෝරද්දි රතු පාට වෙනවා
+                        : Colors.green,
                     checkmarkColor: Colors.white,
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -599,7 +674,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        // Status Label එකටත් Reject පාට අදාළ කරලා තියෙනවා
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 8,
@@ -701,9 +775,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ],
                           const SizedBox(height: 16),
 
-                          // -------------------------------------------------------------
-                          // Reject සහ Assign Buttons දෙක ලස්සනට පෙළට තියෙනවා
-                          // -------------------------------------------------------------
                           if (status == 'Pending')
                             Row(
                               children: [
@@ -830,7 +901,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // TAB 2: Live Map එක
+  // TAB 2: Live Map
   // ==========================================
   Widget _buildLiveMapTab() {
     return StreamBuilder<QuerySnapshot>(
@@ -958,15 +1029,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // TAB 3: Teams Tab එක
+  // TAB 3: TEAMS TAB
   // ==========================================
   Widget _buildTeamsTab() {
-    List<String> teamNames = [
-      'Team Alpha (Truck 1)',
-      'Team Beta (Truck 2)',
-      'Team Gamma (Truck 3)',
-    ];
-
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('reports')
@@ -978,14 +1043,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             child: CircularProgressIndicator(color: Colors.green),
           );
 
-        Map<String, int> teamWorkload = {
-          'Team Alpha (Truck 1)': 0,
-          'Team Beta (Truck 2)': 0,
-          'Team Gamma (Truck 3)': 0,
-        };
+        Map<String, int> teamWorkload = {};
+        for (String team in _teamNames) {
+          teamWorkload[team] = 0;
+        }
 
         int totalTasks = 0;
-
         for (var doc in snapshot.data!.docs) {
           var data = doc.data() as Map<String, dynamic>;
           String assignedTo = data['assignedTeam'] ?? '';
@@ -1000,42 +1063,43 @@ class _AdminDashboardState extends State<AdminDashboard> {
           children: [
             Container(
               margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0F3D1F), Color(0xFF1B5E20)],
+                  colors: [Color(0xFF0B2E13), Color(0xFF1B5E20)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.green.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.green.withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: const Icon(
                       Icons.directions_car,
                       color: Colors.white,
-                      size: 32,
+                      size: 36,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'FLEET OVERVIEW',
                           style: TextStyle(
                             color: Colors.white70,
@@ -1044,12 +1108,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             letterSpacing: 1.2,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
-                          '3 Active Teams',
-                          style: TextStyle(
+                          '${_teamNames.length} Active Teams',
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1066,8 +1130,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Text(
                         '$totalTasks',
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
+                          color: Colors.greenAccent,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -1092,9 +1156,39 @@ class _AdminDashboardState extends State<AdminDashboard> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: teamNames.length,
+                itemCount: _teamNames.length + 1,
                 itemBuilder: (context, index) {
-                  String teamName = teamNames[index];
+                  if (index == _teamNames.length) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text(
+                          "Add New Truck/Team",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Colors.green.shade200,
+                              width: 2,
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: _showAddTeamDialog,
+                      ),
+                    );
+                  }
+
+                  String teamName = _teamNames[index];
                   int tasks = teamWorkload[teamName] ?? 0;
                   bool isBusy = tasks > 3;
                   double progress = tasks / 5.0;
@@ -1114,7 +1208,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
                           Row(
@@ -1125,7 +1219,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   color: isBusy
                                       ? Colors.orange.shade50
                                       : Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Icon(
                                   Icons.local_shipping,
@@ -1145,7 +1239,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 6),
                                     Row(
                                       children: [
                                         Container(
@@ -1175,14 +1269,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
+                                  horizontal: 14,
+                                  vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: isBusy
+                                      ? Colors.orange.shade50
+                                      : Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: Colors.grey.shade200,
+                                    color: isBusy
+                                        ? Colors.orange.shade200
+                                        : Colors.green.shade200,
                                   ),
                                 ),
                                 child: Column(
@@ -1190,18 +1288,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     Text(
                                       '$tasks',
                                       style: TextStyle(
-                                        fontSize: 20,
+                                        fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                         color: isBusy
-                                            ? Colors.orange
-                                            : Colors.green,
+                                            ? Colors.orange.shade800
+                                            : Colors.green.shade800,
                                       ),
                                     ),
-                                    const Text(
+                                    Text(
                                       'Tasks',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.grey,
+                                        color: isBusy
+                                            ? Colors.orange.shade700
+                                            : Colors.green.shade700,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -1217,19 +1318,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(10),
                                   child: LinearProgressIndicator(
                                     value: progress,
-                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundColor: Colors.grey.shade100,
                                     color: isBusy
                                         ? Colors.orange
                                         : Colors.green,
-                                    minHeight: 6,
+                                    minHeight: 8,
                                   ),
                                 ),
                               ),
@@ -1258,43 +1360,302 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
+  // TAB 4: අලුත් PREMIUM SETTINGS TAB
+  // ==========================================
+  Widget _buildSettingsTab() {
+    return Column(
+      children: [
+        // 1. Admin Profile Header
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(top: 50, bottom: 30),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F3D1F), Color(0xFF1B5E20)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(40),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey.shade100,
+                  child: Icon(
+                    Icons.admin_panel_settings,
+                    size: 50,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "System Administrator",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  "ad@sw.com",
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 2. Scrollable Settings List
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "System Configuration",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 2,
+                  shadowColor: Colors.black12,
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        activeColor: Colors.green,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_active,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        title: const Text(
+                          "Push Notifications",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        value: _pushNotifications,
+                        onChanged: (val) =>
+                            setState(() => _pushNotifications = val),
+                      ),
+                      const Divider(height: 1, indent: 60, endIndent: 20),
+                      SwitchListTile(
+                        activeColor: Colors.green,
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        title: const Text(
+                          "Auto-Assign Teams",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text(
+                          "Automatically route new reports",
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        value: _autoAssign,
+                        onChanged: (val) => setState(() => _autoAssign = val),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                const Text(
+                  "Data & Management",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 2,
+                  shadowColor: Colors.black12,
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.analytics,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        title: const Text(
+                          "Export Reports (CSV)",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        trailing: const Icon(
+                          Icons.download,
+                          color: Colors.grey,
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Downloading CSV...'),
+                              backgroundColor: Colors.purple,
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, indent: 60, endIndent: 20),
+                      ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.delete_sweep,
+                            color: Colors.red,
+                          ),
+                        ),
+                        title: const Text(
+                          "Clear Old Data",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Old data cleared!'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // 3. Big Secure Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: Colors.red.shade200, width: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      backgroundColor: Colors.red.shade50,
+                    ),
+                    icon: const Icon(Icons.logout, color: Colors.red),
+                    label: const Text(
+                      "Secure Logout",
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted)
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
   // ප්‍රධාන Build Function එක
   // ==========================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: const Text(
-          'Admin Dashboard',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(12),
+
+      // Settings ටැබ් එකේදි අපි Custom Header එකක් හදපු නිසා, සාමාන්‍ය AppBar එක අයින් කරනවා
+      appBar: _currentIndex == 3
+          ? null
+          : AppBar(
+              title: const Text(
+                'Admin Dashboard',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0,
             ),
-            child: IconButton(
-              icon: const Icon(Icons.logout, color: Colors.redAccent),
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                if (context.mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-        ],
-      ),
 
       body: _currentIndex == 0
           ? _buildReportsTab()
@@ -1302,12 +1663,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ? _buildLiveMapTab()
           : _currentIndex == 2
           ? _buildTeamsTab()
-          : const Center(
-              child: Text(
-                'Settings Coming Soon...',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            ),
+          : _buildSettingsTab(), // අලුත් Settings Tab එක
 
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
