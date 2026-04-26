@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'map_picker_screen.dart'; // ඔයාගේ පරණ Map ෆයිල් එක මෙතනින් Import කළා
+import 'package:geolocator/geolocator.dart'; // අලුතින් දැම්මා
+import 'package:geocoding/geocoding.dart'; // අලුතින් දැම්මා
+import 'map_picker_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -21,6 +23,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _isLoading = false;
   bool _isFetchingLocation = false;
 
+  // ෆොටෝ ගන්න කොටස
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
@@ -118,38 +121,97 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
+  // ----------------------------------------------------------------------
+  // අලුත් Function එක: ඇත්තම GPS Location එක ගැනීම
+  // ----------------------------------------------------------------------
   Future<void> _getCurrentLocation() async {
     setState(() {
       _isFetchingLocation = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // 1. Location Service On කරලද බලනවා
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled. Please turn on GPS.');
+      }
 
-    setState(() {
-      _locationController.text = "Viharamahadevi Park, Colombo 07";
-      _isFetchingLocation = false;
-    });
+      // 2. Location Permission දීලද බලනවා
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied.');
+        }
+      }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location found successfully!'),
-          backgroundColor: Colors.green,
-        ),
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied.');
+      }
+
+      // 3. ඇත්තම ඛණ්ඩාංක (Coordinates) ටික ගන්නවා
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
       );
+
+      // 4. Coordinates වලින් පාරේ නම/නගරය හොයනවා (Geocoding)
+      String address =
+          "${position.latitude}, ${position.longitude}"; // Default එක
+
+      if (!kIsWeb) {
+        // Web එකේදි සමහර වෙලාවට Geocoding වැඩ කරන්නේ නැති නිසා මේක Mobile වලට විතරක් සීමා කරනවා
+        try {
+          List<Placemark> placemarks = await placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
+          if (placemarks.isNotEmpty) {
+            Placemark place = placemarks[0];
+            // උදා: "Galle Road, Colombo, Sri Lanka"
+            address =
+                "${place.street != null && place.street!.isNotEmpty ? place.street! + ', ' : ''}${place.locality ?? ''}";
+            if (address.trim() == ',')
+              address = "${position.latitude}, ${position.longitude}";
+          }
+        } catch (e) {
+          print("Geocoding failed: $e");
+        }
+      }
+
+      setState(() {
+        _locationController.text = address; // Text Box එකට නම දානවා
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location found successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isFetchingLocation = false;
+      });
     }
   }
 
-  // ----------------------------------------------------------------------
-  // අලුත් Function එක: Map එකට ගිහින් Location එක අරන් එනවා
-  // ----------------------------------------------------------------------
   Future<void> _openMapPicker() async {
     final selectedLocation = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MapPickerScreen()),
     );
 
-    // Map එකෙන් Location එකක් තෝරලා ආවොත් ඒක Text Box එකට දානවා
     if (selectedLocation != null) {
       setState(() {
         _locationController.text = selectedLocation.toString();
@@ -187,8 +249,9 @@ class _ReportScreenState extends State<ReportScreen> {
         'location': _locationController.text.trim(),
         'imageBase64': base64Image,
         'status': 'Pending',
-        'latitude': 6.9271 + (DateTime.now().second % 10) * 0.001,
-        'longitude': 79.8612 + (DateTime.now().second % 10) * 0.001,
+        // මෙතන අර random ලොකේෂන් එක වෙනුවට 0,0 දානවා දැනට (Map Picker එක හරියට හැදුවම මෙතනට ඇත්ත Lat/Lng දෙන්න පුළුවන්)
+        'latitude': 6.9271,
+        'longitude': 79.8612,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -342,22 +405,15 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               const SizedBox(height: 8),
 
-              // -------------------------------------------------------------
-              // Location Box එක අලුත් කරලා බොත්තම් 2ක් දැම්මා!
-              // -------------------------------------------------------------
               TextField(
                 controller: _locationController,
                 decoration: InputDecoration(
                   hintText: 'Type or select location...',
                   hintStyle: TextStyle(color: Colors.grey.shade400),
                   prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
-
-                  // දකුණු පැත්තේ Buttons 2ක් තියෙනවා (GPS & Map)
                   suffixIcon: Row(
-                    mainAxisSize: MainAxisSize
-                        .min, // මේක දැම්මේ බොත්තම් දෙක ළඟින් තියෙන්න
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. GPS Button (කොළ පාට)
                       _isFetchingLocation
                           ? const Padding(
                               padding: EdgeInsets.all(14.0),
@@ -379,16 +435,14 @@ class _ReportScreenState extends State<ReportScreen> {
                               tooltip: 'Get Current Location',
                             ),
 
-                      // 2. Map Button (නිල් පාට) - මේක එබුවම පරණ මැප් එකට යනවා
                       IconButton(
                         icon: const Icon(Icons.map, color: Colors.blue),
-                        onPressed: _openMapPicker, // Map එක ඕපන් වෙනවා
+                        onPressed: _openMapPicker,
                         tooltip: 'Choose on Map',
                       ),
-                      const SizedBox(width: 8), // පොඩි පරතරයක්
+                      const SizedBox(width: 8),
                     ],
                   ),
-
                   filled: true,
                   fillColor: Colors.grey.shade50,
                   border: OutlineInputBorder(

@@ -41,16 +41,13 @@ dependencies:
   firebase_storage: ^13.3.0
   shared_preferences: ^2.5.5
   google_maps_flutter: ^2.17.0
-  geolocator: ^14.0.2
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   http: ^1.6.0
-  geolocator: ^13.0.1
+  
+  # මෙන්න මේ දෙක විතරයි අපි අලුතින් තියාගන්නේ
+  geolocator: ^14.0.2
   geocoding: ^3.0.0
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
