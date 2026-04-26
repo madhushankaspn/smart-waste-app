@@ -1,3 +1,4 @@
+import 'translations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,12 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
 
+  // සේව් කරපු භාෂාවක් තියෙනවා නම්, ඒක AppText එකට දෙනවා
+  if (savedLanguage != null) {
+    AppText.lang = savedLanguage;
+  }
+
+  // අන්තිමටම runApp එක එකපාරක් විතරක් Call කරනවා
   runApp(SmartWasteApp(savedLanguage: savedLanguage));
 }
 
@@ -37,6 +44,6 @@ class SmartWasteApp extends StatelessWidget {
             ? const LanguageScreen()
             : const LoginScreen(),
       ),
-    ); // <-- මෙන්න මෙතන මේ ); කෑල්ල තමයි අඩුවෙලා තිබ්බේ
+    );
   }
 }
