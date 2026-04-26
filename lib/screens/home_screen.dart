@@ -324,21 +324,150 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildNextCollectionCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.location_city, size: 16, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    'My Area: $_userArea',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: _showChangeAreaDialog,
+                child: const Text(
+                  'Change',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(height: 1, thickness: 1),
+          ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.calendar_month,
+                  color: Colors.green,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Next Garbage Collection',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tomorrow, 08:00 AM',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.recycling,
+                          size: 14,
+                          color: Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Plastic & Paper',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: Colors.green,
+                ),
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reminder set for tomorrow morning!'),
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==============================================
-  // TAB 1: අලුත් ලස්සන "Home" Tab එක (Reference Image එක වගේ)
+  // TAB 1: අලුත් ලස්සන "Home" Tab එක (Features එක්ක)
   // ==============================================
   Widget _buildHomeTab(
     String email,
     int points,
     String level,
     List<DocumentSnapshot> myReports,
+    List<QueryDocumentSnapshot> unreadNotifications,
   ) {
     String userName = email.isNotEmpty ? email.split('@')[0] : 'User';
     userName = userName.isNotEmpty
         ? userName[0].toUpperCase() + userName.substring(1)
         : 'User';
 
-    // Progress calculation
     int nextLevelPoints = points >= 500 ? 1000 : (points >= 100 ? 500 : 100);
     double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
 
@@ -347,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Section
+          // 1. Header Section (සීනුව මෙතන වැඩ කරනවා දැන්)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -414,21 +543,49 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 10,
+              // -------------------------------------------------------------
+              // මෙන්න මෙතන තමයි Notification සීනුව හැදුවේ!
+              // -------------------------------------------------------------
+              GestureDetector(
+                onTap: () =>
+                    _showNotificationsSheet(context, unreadNotifications),
+                child: Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.notifications_none_rounded,
+                        color: Colors.black87,
+                      ),
                     ),
+                    if (unreadNotifications.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${unreadNotifications.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
-                ),
-                child: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: Colors.black87,
                 ),
               ),
             ],
@@ -557,6 +714,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
 
+          // -------------------------------------------------------------
+          // මෙන්න අමතක වුණු Area සහ Collection Date Card එක ආයෙත් දැම්මා!
+          // -------------------------------------------------------------
+          _buildNextCollectionCard(),
+          const SizedBox(height: 24),
+
           // 3. Black Promo Card
           Container(
             width: double.infinity,
@@ -640,7 +803,6 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Weekly Impact Box
               Expanded(
                 flex: 2,
                 child: Container(
@@ -694,7 +856,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const Spacer(),
-                      // Fake Chart Bar
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -752,7 +913,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              // Recent Reports List
               Expanded(
                 flex: 3,
                 child: Column(
@@ -862,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9), // Light Green
+              color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -907,7 +1067,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 100), // Space for FAB
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -1189,7 +1349,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -1218,7 +1377,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemBuilder: (context, index) {
                   var userDoc = users[index];
                   var userData = userDoc.data() as Map<String, dynamic>;
-
                   int points = userData['points'] ?? 0;
                   String email = userData['email'] ?? 'Eco Hero';
                   String userName = email.split('@')[0];
@@ -1693,8 +1851,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
-
-              // Appbar එක සම්පූර්ණයෙන්ම අයින් කරලා, Custom Header එකක් Home Tab එකේ දැම්මා.
               appBar: (_currentIndex == 0 || _currentIndex == 2)
                   ? null
                   : AppBar(
@@ -1757,6 +1913,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         points,
                         level,
                         myReports,
+                        unreadNotifications,
                       )
                     : _currentIndex == 1
                     ? _buildRewardsTab(points, level, levelColor)
@@ -1794,9 +1951,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
-                  backgroundColor: const Color(
-                    0xFF1DD15D,
-                  ), // ෆොටෝ එකේ තියෙන Neon Green පාට
+                  backgroundColor: const Color(0xFF1DD15D),
                   elevation: 0,
                   child: const Icon(
                     Icons.add_a_photo,
