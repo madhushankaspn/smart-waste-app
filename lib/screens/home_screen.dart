@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'login_screen.dart';
 import 'report_screen.dart';
 
@@ -32,12 +35,100 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _updateLastPoints(int newPoints) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_points', newPoints);
-    _lastSavedPoints = newPoints;
+  // -------------------------------------------------------------
+  // Profile Update Functions
+  // -------------------------------------------------------------
+  Future<void> _updateName(String newName) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser?.uid)
+        .update({'name': newName});
   }
 
+  Future<void> _updateProfilePicture() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    if (pickedFile != null) {
+      List<int> imageBytes = await pickedFile.readAsBytes();
+      String base64Image = base64Encode(imageBytes);
+
+      final currentUser = FirebaseAuth.instance.currentUser;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser?.uid)
+          .update({'profilePhoto': base64Image});
+
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+    }
+  }
+
+  void _showEditNameDialog(String currentName) {
+    TextEditingController nameController = TextEditingController(
+      text: currentName,
+    );
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Update Your Name',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            hintText: "Enter your name",
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              _updateName(nameController.text.trim());
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Save',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -------------------------------------------------------------
+  // General Functions
+  // -------------------------------------------------------------
   Future<void> _changeArea(String newArea) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_area', newArea);
@@ -298,6 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // -------------------------------------------------------------
+  // Theme & Styles
+  // -------------------------------------------------------------
   Color _getLevelColor(String level) {
     switch (level) {
       case 'Silver':
@@ -483,7 +577,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 1: Home Tab
+  // TAB 1: HOME TAB
   // ==============================================
   Widget _buildHomeTab(
     String email,
@@ -491,10 +585,14 @@ class _HomeScreenState extends State<HomeScreen> {
     String level,
     List<DocumentSnapshot> myReports,
     List<QueryDocumentSnapshot> unreadNotifications,
+    String? customName,
+    String? photoBase64,
   ) {
-    String userName = email.isNotEmpty ? email.split('@')[0] : 'User';
-    userName = userName.isNotEmpty
-        ? userName[0].toUpperCase() + userName.substring(1)
+    String displayName = (customName != null && customName.isNotEmpty)
+        ? customName
+        : email.split('@')[0];
+    displayName = displayName.isNotEmpty
+        ? displayName[0].toUpperCase() + displayName.substring(1)
         : 'User';
 
     int nextLevelPoints = points >= 500 ? 1000 : (points >= 100 ? 500 : 100);
@@ -516,14 +614,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.orange.shade200,
-                        child: Text(
-                          userName[0],
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepOrange,
-                          ),
-                        ),
+                        backgroundImage: photoBase64 != null
+                            ? MemoryImage(base64Decode(photoBase64))
+                            : null,
+                        child: photoBase64 == null
+                            ? Text(
+                                displayName[0],
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepOrange,
+                                ),
+                              )
+                            : null,
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -560,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        'Hello, $userName! 👋',
+                        'Hello, $displayName! 👋',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -616,6 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 24),
+
           GestureDetector(
             onTap: () => setState(() => _currentIndex = 1),
             child: Container(
@@ -714,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Target: Silver Level at 100 Pts',
+                    'Target: Cinnamon Grand Dinner',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -736,8 +840,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
+
           _buildNextCollectionCard(),
           const SizedBox(height: 24),
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -815,6 +921,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1023,6 +1130,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 32),
+
           const Text(
             'Daily Eco-Insights',
             style: TextStyle(
@@ -1087,7 +1195,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 2: අලුත් ලස්සන "Rewards" Tab එක (Premium Cards)
+  // TAB 2: REWARDS TAB
   // ==============================================
   Widget _buildRewardsTab(int points, String level, Color levelColor) {
     int nextLevelPoints = 100;
@@ -1125,7 +1233,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 24),
 
-          // 1. Main Level Card
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1249,7 +1356,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
 
-          // 2. අලුත් Colorful Premium Cards
           _buildPremiumRewardCard(
             title: 'Platinum Reward',
             points: '1000 Pts',
@@ -1283,7 +1389,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // අලුත් Function එක: Premium, Gamified Reward Card ඩිසයින් එක
   Widget _buildPremiumRewardCard({
     required String title,
     required String points,
@@ -1312,16 +1417,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Stack(
         children: [
-          // Background Watermark Icon එක (කාඩ් එකේ යටින් ලොකුවට පේන්න)
           Positioned(
             right: -20,
             bottom: -20,
             child: Icon(icon, size: 100, color: Colors.white.withOpacity(0.15)),
           ),
-
           Row(
             children: [
-              // Icon Box (Glassmorphism Style)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -1335,7 +1437,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Icon(icon, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1361,7 +1462,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -1435,7 +1535,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 3: Leaderboard Tab
+  // TAB 3: LEADERBOARD TAB
   // ==============================================
   Widget _buildLeaderboardTab(String currentUserId) {
     return Column(
@@ -1516,7 +1616,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   var userData = userDoc.data() as Map<String, dynamic>;
                   int points = userData['points'] ?? 0;
                   String email = userData['email'] ?? 'Eco Hero';
-                  String userName = email.split('@')[0];
+                  String userName = userData['name'] ?? email.split('@')[0];
                   bool isCurrentUser = userDoc.id == currentUserId;
 
                   Color rankColor = Colors.grey.shade400;
@@ -1611,7 +1711,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 4: Profile Tab
+  // TAB 4: PROFILE TAB (Fixed Header & Edit Name/Photo)
   // ==============================================
   Widget _buildStatCard(
     String title,
@@ -1661,286 +1761,334 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfileTab(
-    String email,
-    int points,
-    String level,
-    Color levelColor,
+    Map<String, dynamic> userData,
     int totalReports,
+    Color levelColor,
   ) {
-    return Stack(
+    String email = userData['email'] ?? '';
+    String name = userData['name'] ?? email.split('@')[0];
+    String level = userData['level'] ?? 'Bronze';
+    int points = userData['points'] ?? 0;
+    String? photoBase64 = userData['profilePhoto'];
+
+    return Column(
       children: [
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [levelColor, levelColor.withOpacity(0.6)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(40),
-              bottomRight: Radius.circular(40),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: levelColor.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-        ),
-        SingleChildScrollView(
-          padding: const EdgeInsets.only(
-            top: 80,
-            left: 16,
-            right: 16,
-            bottom: 100,
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 15,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
+        // 1. FIXED HEADER (මේ කොටස Scroll වෙන්නේ නෑ)
+        Stack(
+          children: [
+            Container(
+              height: 240,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [levelColor, levelColor.withOpacity(0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: CircleAvatar(
-                  radius: 55,
-                  backgroundColor: Colors.grey.shade100,
-                  child: Text(
-                    email.isNotEmpty ? email[0].toUpperCase() : 'U',
-                    style: TextStyle(
-                      fontSize: 45,
-                      fontWeight: FontWeight.bold,
-                      color: levelColor,
-                    ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: levelColor.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                email,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: levelColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: levelColor.withOpacity(0.5)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Center(
+                child: Column(
                   children: [
-                    Icon(_getLevelIcon(level), size: 18, color: levelColor),
-                    const SizedBox(width: 6),
+                    // Profile Image with Edit Button
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 15,
+                                offset: Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 55,
+                            backgroundColor: Colors.grey.shade100,
+                            backgroundImage: photoBase64 != null
+                                ? MemoryImage(base64Decode(photoBase64))
+                                : null,
+                            child: photoBase64 == null
+                                ? Text(
+                                    name.isNotEmpty
+                                        ? name[0].toUpperCase()
+                                        : 'U',
+                                    style: TextStyle(
+                                      fontSize: 45,
+                                      fontWeight: FontWeight.bold,
+                                      color: levelColor,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _updateProfilePicture,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Name and Edit Icon
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () => _showEditNameDialog(name),
+                        ),
+                      ],
+                    ),
                     Text(
-                      '$level Member',
-                      style: TextStyle(
-                        color: levelColor,
-                        fontWeight: FontWeight.bold,
+                      email,
+                      style: const TextStyle(
+                        color: Colors.white70,
                         fontSize: 14,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildStatCard(
-                    'Points',
-                    '$points',
-                    Icons.stars_rounded,
-                    Colors.amber,
-                  ),
-                  _buildStatCard(
-                    'Reports',
-                    '$totalReports',
-                    Icons.assignment_turned_in,
-                    Colors.blue,
-                  ),
-                  _buildStatCard(
-                    'Impact',
-                    '${(totalReports * 2.5).toStringAsFixed(1)} kg',
-                    Icons.eco,
-                    Colors.green,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Account Settings',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 4,
-                shadowColor: Colors.black12,
-                color: Colors.white,
-                child: Column(
+            ),
+          ],
+        ),
+
+        // 2. SCROLLABLE SETTINGS SECTION (Expanded පාවිච්චි කරලා මේක විතරක් scroll වෙන්න හැදුවා)
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                // Stats Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      title: const Text(
-                        'My Area',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        _userArea,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      onTap: _showChangeAreaDialog,
+                    _buildStatCard(
+                      "Points",
+                      points.toString(),
+                      Icons.stars_rounded,
+                      Colors.amber,
                     ),
-                    const Divider(height: 1, indent: 20, endIndent: 20),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.history, color: Colors.orange),
-                      ),
-                      title: const Text(
-                        'Report History',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      onTap: () => setState(() => _currentIndex = 0),
+                    _buildStatCard(
+                      "Reports",
+                      totalReports.toString(),
+                      Icons.assignment_turned_in,
+                      Colors.blue,
                     ),
-                    const Divider(height: 1, indent: 20, endIndent: 20),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.help_outline,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      title: const Text(
-                        'Help & Support',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Help & Support coming soon!'),
-                          backgroundColor: Colors.purple,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1, indent: 20, endIndent: 20),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.logout, color: Colors.red),
-                      ),
-                      title: const Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () async {
-                        await FirebaseAuth.instance.signOut();
-                        if (context.mounted)
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                          );
-                      },
+                    _buildStatCard(
+                      "Impact",
+                      "${(totalReports * 2.5).toStringAsFixed(1)} kg",
+                      Icons.eco,
+                      Colors.green,
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 32),
+
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Account Settings",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Settings Options
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 4,
+                  shadowColor: Colors.black12,
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.location_on,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        title: const Text(
+                          "My Area",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          _userArea,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        onTap: _showChangeAreaDialog,
+                      ),
+                      const Divider(height: 1, indent: 20, endIndent: 20),
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.history,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        title: const Text(
+                          "Report History",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        onTap: () => setState(() => _currentIndex = 0),
+                      ),
+                      const Divider(height: 1, indent: 20, endIndent: 20),
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.help_outline,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        title: const Text(
+                          "Help & Support",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Help & Support coming soon!'),
+                            backgroundColor: Colors.purple,
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 20, endIndent: 20),
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.logout, color: Colors.red),
+                        ),
+                        title: const Text(
+                          "Logout",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onTap: () async {
+                          await FirebaseAuth.instance.signOut();
+                          if (mounted)
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginScreen(),
+                              ),
+                            );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 80), // For FAB spacing
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
+  // ==============================================
+  // MAIN BUILD METHOD
+  // ==============================================
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -1988,7 +2136,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
-              appBar: (_currentIndex == 0 || _currentIndex == 2)
+
+              // App Bar එක Profile Tab එකේදි පෙන්වන්නේ නෑ, මොකද එතන වෙනම Fixed Header එකක් තියෙනවා
+              appBar:
+                  (_currentIndex == 0 ||
+                      _currentIndex == 2 ||
+                      _currentIndex == 3)
                   ? null
                   : AppBar(
                       title: const Text(
@@ -1999,48 +2152,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      backgroundColor: _currentIndex == 3
-                          ? levelColor
-                          : Colors.green,
+                      backgroundColor: Colors.green,
                       elevation: 0,
-                      actions: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.notifications,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                              onPressed: () => _showNotificationsSheet(
-                                context,
-                                unreadNotifications,
-                              ),
-                            ),
-                            if (unreadNotifications.isNotEmpty)
-                              Positioned(
-                                right: 8,
-                                top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '${unreadNotifications.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
                     ),
 
               body: SafeArea(
@@ -2051,18 +2164,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         level,
                         myReports,
                         unreadNotifications,
+                        userData['name'],
+                        userData['profilePhoto'],
                       )
                     : _currentIndex == 1
                     ? _buildRewardsTab(points, level, levelColor)
                     : _currentIndex == 2
                     ? _buildLeaderboardTab(currentUser?.uid ?? '')
-                    : _buildProfileTab(
-                        currentUser?.email ?? '',
-                        points,
-                        level,
-                        levelColor,
-                        myReports.length,
-                      ),
+                    : _buildProfileTab(userData, myReports.length, levelColor),
               ),
 
               floatingActionButtonLocation:
