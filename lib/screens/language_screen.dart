@@ -12,7 +12,6 @@ class LanguageScreen extends StatefulWidget {
 class _LanguageScreenState extends State<LanguageScreen> {
   String _selectedLanguage = 'English'; // මුලින්ම English තෝරලා තියෙන්නේ
 
-  // භාෂාව Save කරලා ඊළඟ Screen එකට යන Function එක
   Future<void> _saveLanguageAndContinue() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', _selectedLanguage);
@@ -25,143 +24,226 @@ class _LanguageScreenState extends State<LanguageScreen> {
     }
   }
 
-  // Language තෝරන Card එක හදන Widget එක
-  Widget _buildLanguageCard(
-    String title,
-    String subtitle,
-    String languageValue,
-  ) {
-    bool isSelected = _selectedLanguage == languageValue;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          // අර ලස්සන ලා කොළ පාට Gradient එක
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 20.0,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+
+                // ලස්සන සුදු පාට කොටුව ඇතුලේ තියෙන Globe Icon එක
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.language_rounded,
+                    size: 50,
+                    color: Color(0xFF1DD15D), // Neon Green
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Title
+                const Text(
+                  'Welcome to Smart Waste',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32), // Dark Green
+                    letterSpacing: -0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+
+                // Subtitle
+                Text(
+                  'Choose your preferred language to get started with smart garbage reporting.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+
+                // English Language Card
+                _buildLanguageOption(
+                  title: 'English',
+                  subtitle: 'International',
+                  value: 'English',
+                ),
+                const SizedBox(height: 16),
+
+                // Sinhala Language Card
+                _buildLanguageOption(
+                  title: 'සිංහල',
+                  subtitle: 'Sri Lanka',
+                  value: 'Sinhala',
+                ),
+
+                const Spacer(),
+
+                // Continue Button එක
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50), // කොළ පාට
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.green.withOpacity(0.4),
+                    ),
+                    onPressed: _saveLanguageAndContinue,
+                    child: const Text(
+                      'Continue / ඉදිරියට',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Language තෝරන කාඩ් එක හදන Function එක
+  Widget _buildLanguageOption({
+    required String title,
+    required String subtitle,
+    required String value,
+  }) {
+    bool isSelected = _selectedLanguage == value;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedLanguage = languageValue;
+          _selectedLanguage = value;
         });
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? Colors.green.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.green : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
+            width: 2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            // පොඩි Icon එකක්
+            // ලෝක ගෝලයේ පොඩි Icon එක
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: isSelected
+                    ? Colors.green.shade100
+                    : Colors.grey.shade100,
+                shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.language, color: Colors.grey),
+              child: Icon(
+                Icons.language,
+                color: isSelected
+                    ? const Color(0xFF2E7D32)
+                    : Colors.grey.shade500,
+              ),
             ),
             const SizedBox(width: 16),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? const Color(0xFF2E7D32)
+                          : Colors.black87,
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
-            // Select වුණාම පෙන්වන හරි ලකුණ
-            if (isSelected)
-              const Icon(Icons.check_circle, color: Colors.green)
-            else
-              Icon(Icons.circle_outlined, color: Colors.grey.shade300),
+
+            // Checkmark එක
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected
+                    ? const Color(0xFF4CAF50)
+                    : Colors.transparent,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF4CAF50)
+                      : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
+            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // සුදු පාට පසුබිම
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // Globe Icon එක
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.language,
-                  size: 40,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              const Text(
-                'Welcome to Smart Waste',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-
-              const Text(
-                'Choose your preferred language to get started with smart garbage reporting.',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-
-              // Language Cards දෙක
-              _buildLanguageCard('English', 'International', 'English'),
-              _buildLanguageCard('සිංහල', 'Sri Lanka', 'Sinhala'),
-
-              const Spacer(),
-
-              // Continue Button එක
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: _saveLanguageAndContinue,
-                  child: const Text(
-                    'Continue / ඉදිරියට',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
         ),
       ),
     );
