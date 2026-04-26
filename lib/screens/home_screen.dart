@@ -307,7 +307,36 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Platinum':
         return Colors.deepPurple;
       default:
-        return Colors.brown.shade400;
+        return Colors.orange.shade700;
+    }
+  }
+
+  LinearGradient _getGradientForLevel(String level) {
+    switch (level) {
+      case 'Silver':
+        return LinearGradient(
+          colors: [Colors.blueGrey.shade300, Colors.grey.shade800],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'Gold':
+        return LinearGradient(
+          colors: [Colors.amber.shade400, Colors.orange.shade800],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'Platinum':
+        return LinearGradient(
+          colors: [Colors.purple.shade400, Colors.deepPurple.shade900],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return LinearGradient(
+          colors: [Colors.orange.shade400, Colors.deepOrange.shade800],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
     }
   }
 
@@ -454,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 1: අලුත් ලස්සන "Home" Tab එක (Features එක්ක)
+  // TAB 1: Home Tab
   // ==============================================
   Widget _buildHomeTab(
     String email,
@@ -476,7 +505,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Section (සීනුව මෙතන වැඩ කරනවා දැන්)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -543,9 +571,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              // -------------------------------------------------------------
-              // මෙන්න මෙතන තමයි Notification සීනුව හැදුවේ!
-              // -------------------------------------------------------------
               GestureDetector(
                 onTap: () =>
                     _showNotificationsSheet(context, unreadNotifications),
@@ -591,10 +616,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 24),
-
-          // 2. Dark Green Wallet Card
           GestureDetector(
-            onTap: () => setState(() => _currentIndex = 1), // Rewards Tab
+            onTap: () => setState(() => _currentIndex = 1),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -713,14 +736,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // -------------------------------------------------------------
-          // මෙන්න අමතක වුණු Area සහ Collection Date Card එක ආයෙත් දැම්මා!
-          // -------------------------------------------------------------
           _buildNextCollectionCard(),
           const SizedBox(height: 24),
-
-          // 3. Black Promo Card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -798,8 +815,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // 4. Weekly Impact & Recent Reports Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1008,8 +1023,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 32),
-
-          // 5. Daily Eco-Insights Banner
           const Text(
             'Daily Eco-Insights',
             style: TextStyle(
@@ -1074,7 +1087,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 2: Rewards Tab
+  // TAB 2: අලුත් ලස්සන "Rewards" Tab එක (Premium Cards)
   // ==============================================
   Widget _buildRewardsTab(int points, String level, Color levelColor) {
     int nextLevelPoints = 100;
@@ -1093,60 +1106,89 @@ class _HomeScreenState extends State<HomeScreen> {
     double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Rewards Journey',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Earn points by reporting waste and unlock exclusive rewards!',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
           ),
           const SizedBox(height: 24),
+
+          // 1. Main Level Card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              gradient: _getGradientForLevel(level),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: levelColor.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current Level: $level',
-                          style: TextStyle(
-                            color: levelColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Current Level: $level',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$points Points',
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Icon(_getLevelIcon(level), size: 50, color: levelColor),
+                    Icon(_getLevelIcon(level), size: 40, color: Colors.white),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$points',
+                      style: const TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8.0, left: 6.0),
+                      child: Text(
+                        'Points',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -1155,7 +1197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const Text(
                       'Progress to next level',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     Text(
                       points >= 1000
@@ -1164,6 +1206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -1173,53 +1216,65 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.grey.shade200,
-                    color: Colors.green,
-                    minHeight: 10,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    color: Colors.white,
+                    minHeight: 8,
                   ),
                 ),
                 if (points < 1000) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Only ${nextLevelPoints - points} points away from $nextLevelName!',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      'Only ${nextLevelPoints - points} points away from $nextLevelName!',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
+
           const Text(
             'Available Rewards',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildRewardCard(
-            title: 'Platinum Level',
-            points: '1000 Points',
-            subtitle: '50% OFF Dinner at Cinnamon Grand Colombo',
+
+          // 2. අලුත් Colorful Premium Cards
+          _buildPremiumRewardCard(
+            title: 'Platinum Reward',
+            points: '1000 Pts',
+            subtitle: '50% OFF Dinner at Cinnamon Grand',
             icon: Icons.diamond,
-            color: Colors.deepPurple,
+            gradientColors: [
+              Colors.purple.shade400,
+              Colors.deepPurple.shade900,
+            ],
             isUnlocked: points >= 1000,
           ),
-          _buildRewardCard(
-            title: 'Gold Level',
-            points: '500 Points',
+          _buildPremiumRewardCard(
+            title: 'Gold Reward',
+            points: '500 Pts',
             subtitle: 'Priority Report Verification & VIP Status',
             icon: Icons.emoji_events,
-            color: Colors.amber.shade700,
+            gradientColors: [Colors.amber.shade400, Colors.orange.shade800],
             isUnlocked: points >= 500,
           ),
-          _buildRewardCard(
-            title: 'Silver Level',
-            points: '100 Points',
+          _buildPremiumRewardCard(
+            title: 'Silver Reward',
+            points: '100 Pts',
             subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
             icon: Icons.workspace_premium,
-            color: Colors.blueGrey,
+            gradientColors: [Colors.blueGrey.shade400, Colors.grey.shade800],
             isUnlocked: points >= 100,
           ),
           const SizedBox(height: 80),
@@ -1228,70 +1283,152 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRewardCard({
+  // අලුත් Function එක: Premium, Gamified Reward Card ඩිසයින් එක
+  Widget _buildPremiumRewardCard({
     required String title,
     required String points,
     required String subtitle,
     required IconData icon,
-    required Color color,
+    required List<Color> gradientColors,
     required bool isUnlocked,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
-        border: Border.all(
-          color: isUnlocked ? color : Colors.grey.shade300,
-          width: 2,
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isUnlocked ? color : Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors.last.withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background Watermark Icon එක (කාඩ් එකේ යටින් ලොකුවට පේන්න)
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(icon, size: 100, color: Colors.white.withOpacity(0.15)),
+          ),
+
+          Row(
+            children: [
+              // Icon Box (Glassmorphism Style)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(icon, color: Colors.white, size: 32),
+              ),
+              const SizedBox(width: 16),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: const TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isUnlocked ? color : Colors.grey.shade600,
+                        color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 6),
                     Text(
-                      points,
+                      subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? Colors.green : Colors.grey,
+                        color: Colors.white.withOpacity(0.9),
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    points,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (isUnlocked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.lock_open, size: 12, color: Colors.green),
+                          SizedBox(width: 4),
+                          Text(
+                            'UNLOCKED',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white30),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.lock, size: 12, color: Colors.white70),
+                          SizedBox(width: 4),
+                          Text(
+                            'LOCKED',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ),
-          if (isUnlocked) const Icon(Icons.check_circle, color: Colors.green),
         ],
       ),
     );
