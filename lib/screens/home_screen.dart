@@ -714,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Target: Cinnamon Grand Dinner',
+                    'Target: Silver Level at 100 Pts',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
