@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'admin_dashboard.dart';
-import 'register_screen.dart'; // ඔයාගේ රෙජිස්ටර් පේජ් එකේ ෆයිල් නම
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isObscure = true; // Password එක පෙන්නනවාද නැද්ද කියලා තීරණය කරනවා
+  bool _isObscure = true;
 
   Future<void> _login() async {
     setState(() {
@@ -29,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (mounted) {
-        // Admin ද කියලා බලනවා
         if (_emailController.text.trim() == 'ad@sw.com') {
           Navigator.pushReplacement(
             context,
@@ -70,15 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. ෆොටෝ එකේ තියෙන ලා කොළ පාට Gradient පසුබිම
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFE8F5E9),
-              Color(0xFFC8E6C9),
-            ], // ලා කොළ පාටවල් දෙකක්
+            colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -90,29 +85,32 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 2. සුදු පාට රවුම ඇතුලේ තියෙන Leaf Icon එක
+                  // අලුත් කරපු ඔරිජිනල් Logo එක
                   Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(
+                        25,
+                      ), // රවුම් කොන් සහිත කොටුව
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black12,
                           blurRadius: 20,
-                          offset: Offset(0, 10),
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
                     child: const Icon(
-                      Icons.eco, // කොළේ අයිකන් එක
-                      size: 50,
-                      color: Color(0xFF388E3C), // තද කොළ පාට
+                      Icons
+                          .delete_sweep_rounded, // පරණ Splash Screen එකේ තිබ්බ Icon එකමයි
+                      size: 60,
+                      color: Color(0xFF1DD15D), // Neon Green පාට
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // 3. Smart Waste Title එක
                   const Text(
                     'Smart Waste',
                     style: TextStyle(
@@ -124,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Subtitle
                   Text(
                     'Keep your city clean and sustainable',
                     style: TextStyle(
@@ -135,7 +132,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // 4. සුදු පාට Login Card එක
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -151,7 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Email Field
                         TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -172,7 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Password Field
                         TextField(
                           controller: _passwordController,
                           obscureText: _isObscure,
@@ -183,7 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               Icons.lock_outline,
                               color: Color(0xFF4CAF50),
                             ),
-                            // ඇහැ අයිකන් එක (Password පෙන්නන්න/හංගන්න)
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isObscure
@@ -206,7 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        // Forgot Password (දකුණු පැත්තට)
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -229,14 +221,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
 
-                        // Log In Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF4CAF50,
-                              ), // කොළ පාට බොත්තම
+                              backgroundColor: const Color(0xFF4CAF50),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -269,7 +258,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // 5. Register Link එක
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
