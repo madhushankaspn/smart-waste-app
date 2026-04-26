@@ -1535,57 +1535,83 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 3: LEADERBOARD TAB
+  // TAB 3: අලුත් PREMIUM LEADERBOARD TAB
   // ==============================================
   Widget _buildLeaderboardTab(String currentUserId) {
     return Column(
       children: [
+        // 1. අලුත් ලස්සන Header එක
         Container(
           width: double.infinity,
           padding: const EdgeInsets.only(
             top: 40,
             left: 20,
             right: 20,
-            bottom: 30,
+            bottom: 40,
           ),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade700, Colors.green.shade400],
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF0F3D1F),
+                Color(0xFF1DD15D),
+              ], // තද කොළේ ඉඳන් Neon කොළේට
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
+              bottomLeft: Radius.circular(40),
+              bottomRight: Radius.circular(40),
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.green.withOpacity(0.4),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: const Column(
+          child: Column(
             children: [
-              Icon(Icons.emoji_events, size: 70, color: Colors.yellow),
-              SizedBox(height: 10),
-              Text(
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 2,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  size: 60,
+                  color: Colors.amberAccent,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
                 "Leaderboard",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 28,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 "Top Eco-Warriors in the City",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
         ),
+
+        // 2. අලුත් Rank List එක
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -1609,7 +1635,12 @@ class _HomeScreenState extends State<HomeScreen> {
               var users = snapshot.data!.docs;
 
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(
+                  top: 20,
+                  left: 16,
+                  right: 16,
+                  bottom: 100,
+                ),
                 itemCount: users.length,
                 itemBuilder: (context, index) {
                   var userDoc = users[index];
@@ -1619,53 +1650,86 @@ class _HomeScreenState extends State<HomeScreen> {
                   String userName = userData['name'] ?? email.split('@')[0];
                   bool isCurrentUser = userDoc.id == currentUserId;
 
-                  Color rankColor = Colors.grey.shade400;
-                  IconData rankIcon = Icons.military_tech;
+                  // පාට තීරණය කරන කොටස
+                  Color rankColor;
+                  Color bgColor;
                   if (index == 0) {
-                    rankColor = Colors.amber;
-                    rankIcon = Icons.workspace_premium;
+                    rankColor = Colors.amber.shade600; // Gold
+                    bgColor = Colors.amber.shade50;
                   } else if (index == 1) {
-                    rankColor = Colors.grey.shade400;
-                    rankIcon = Icons.workspace_premium;
+                    rankColor = Colors.blueGrey.shade400; // Silver
+                    bgColor = Colors.blueGrey.shade50;
                   } else if (index == 2) {
-                    rankColor = Colors.brown.shade300;
-                    rankIcon = Icons.workspace_premium;
+                    rankColor = Colors.brown.shade500; // Bronze
+                    bgColor = Colors.brown.shade50;
+                  } else {
+                    rankColor = Colors.grey.shade500; // සාමාන්‍ය අයට
+                    bgColor = Colors.white;
                   }
 
-                  return Card(
+                  // තමන්ගේ කාඩ් එක නම් පාට ලා කොළ වෙනවා
+                  if (isCurrentUser) {
+                    bgColor = Colors.green.shade50;
+                  }
+
+                  return Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        // තමන්ගේ එකට ලොකු කොළ පාට බෝඩර් එකක්, Top 3 අයට ඒ ඒ පාටින් බෝඩර් එකක් දෙනවා
+                        color: isCurrentUser
+                            ? Colors.green.shade400
+                            : (index < 3
+                                  ? rankColor.withOpacity(0.5)
+                                  : Colors.grey.shade200),
+                        width: isCurrentUser ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    elevation: isCurrentUser ? 4 : 1,
-                    color: isCurrentUser ? Colors.green.shade50 : Colors.white,
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 8,
+                        vertical: 10,
                       ),
                       leading: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '#${index + 1}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: index < 3 ? rankColor : Colors.grey,
+                          SizedBox(
+                            width: 30,
+                            child: Text(
+                              '#${index + 1}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: rankColor,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           CircleAvatar(
+                            radius: 22,
                             backgroundColor: index < 3
-                                ? rankColor.withOpacity(0.2)
-                                : Colors.grey.shade100,
+                                ? rankColor
+                                : Colors.grey.shade200,
+                            // මුල් 3 දෙනාට තරුවක් දෙනවා, අනිත් අයට නමේ මුල් අකුර දෙනවා
                             child: index < 3
-                                ? Icon(rankIcon, color: rankColor)
+                                ? const Icon(
+                                    Icons.star,
+                                    color: Colors.white,
+                                    size: 20,
+                                  )
                                 : Text(
                                     userName[0].toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.grey,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -1675,26 +1739,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: Text(
                         isCurrentUser ? "You ($userName)" : userName,
                         style: TextStyle(
-                          fontWeight: isCurrentUser
+                          fontWeight: isCurrentUser || index < 3
                               ? FontWeight.bold
-                              : FontWeight.normal,
+                              : FontWeight.w600,
                           fontSize: 16,
+                          color: Colors.black87,
                         ),
                       ),
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 14,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade100,
+                          // Points පෙන්නන Badge එකත් ඒ අදාළ පාටින්ම පෙන්නනවා
+                          color: index < 3
+                              ? rankColor.withOpacity(0.2)
+                              : Colors.green.shade100,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '$points pts',
+                          '$points Pts',
                           style: TextStyle(
-                            color: Colors.green.shade800,
+                            color: index < 3
+                                ? rankColor.withOpacity(0.9)
+                                : Colors.green.shade800,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                       ),
@@ -1705,13 +1776,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
-        const SizedBox(height: 40),
       ],
     );
   }
 
   // ==============================================
-  // TAB 4: PROFILE TAB (Fixed Header & Edit Name/Photo)
+  // TAB 4: PROFILE TAB
   // ==============================================
   Widget _buildStatCard(
     String title,
@@ -1773,7 +1843,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Column(
       children: [
-        // 1. FIXED HEADER (මේ කොටස Scroll වෙන්නේ නෑ)
         Stack(
           children: [
             Container(
@@ -1802,7 +1871,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    // Profile Image with Edit Button
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
@@ -1859,7 +1927,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Name and Edit Icon
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1895,14 +1962,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        // 2. SCROLLABLE SETTINGS SECTION (Expanded පාවිච්චි කරලා මේක විතරක් scroll වෙන්න හැදුවා)
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // Stats Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -1937,7 +2002,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Settings Options
                 Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -2077,7 +2141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 80), // For FAB spacing
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -2137,7 +2201,6 @@ class _HomeScreenState extends State<HomeScreen> {
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
 
-              // App Bar එක Profile Tab එකේදි පෙන්වන්නේ නෑ, මොකද එතන වෙනම Fixed Header එකක් තියෙනවා
               appBar:
                   (_currentIndex == 0 ||
                       _currentIndex == 2 ||
