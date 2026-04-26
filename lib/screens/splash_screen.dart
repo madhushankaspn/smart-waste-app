@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'language_screen.dart'; // ඔයාගේ Language Screen එකේ ෆයිල් නම
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final Widget nextScreen; // අලුතින් එකතු කරපු කෑල්ල
+
+  const SplashScreen({super.key, required this.nextScreen});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -13,11 +14,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // තත්පර 3 කින් ඉබේම Language Screen එකට යනවා
+    // තත්පර 3 කින් main.dart එකෙන් එවන පිටුවට (nextScreen) ඉබේම යනවා
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LanguageScreen()), // ඔයාගේ language page එකේ class නම
+        MaterialPageRoute(builder: (context) => widget.nextScreen),
       );
     });
   }
@@ -25,15 +26,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ෆොටෝ එකේ තියෙන ලස්සන ළා කොළ පාට
-      backgroundColor: const Color(0xFF1DD15D), 
+      backgroundColor: const Color(0xFF1DD15D),
       body: Stack(
         children: [
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // සුදු පාට Logo Box එක
                 Container(
                   width: 120,
                   height: 120,
@@ -45,18 +44,17 @@ class _SplashScreenState extends State<SplashScreen> {
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
-                      )
+                      ),
                     ],
                   ),
                   child: const Icon(
-                    Icons.delete_sweep_rounded, // ෆොටෝ එකට සමාන Icon එක
+                    Icons.delete_sweep_rounded,
                     size: 70,
                     color: Color(0xFF1DD15D),
                   ),
                 ),
                 const SizedBox(height: 30),
-                
-                // App නම
+
                 const Text(
                   'Smart Waste',
                   style: TextStyle(
@@ -67,8 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
-                // Tagline එක
+
                 Text(
                   'Clean Cities. Smart Future.',
                   style: TextStyle(
@@ -80,8 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
             ),
           ),
-          
-          // යටින් තියෙන ECO-SYSTEM READY කොටස
+
           Positioned(
             bottom: 40,
             left: 0,

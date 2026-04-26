@@ -3,7 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
-import 'screens/language_screen.dart'; // මේක අලුතින් Import කරන්න
+import 'screens/language_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,7 @@ void main() async {
 }
 
 class SmartWasteApp extends StatelessWidget {
-  final String? savedLanguage; // මේක අලුතින් දැම්මා
+  final String? savedLanguage;
 
   const SmartWasteApp({super.key, this.savedLanguage});
 
@@ -31,9 +32,11 @@ class SmartWasteApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
       ),
       // භාෂාවක් Save වෙලා තියෙනවා නම් Login එකට යනවා, නැත්නම් Language Screen එකට යනවා
-      home: savedLanguage == null
-          ? const LanguageScreen()
-          : const LoginScreen(),
-    );
+      home: SplashScreen(
+        nextScreen: savedLanguage == null
+            ? const LanguageScreen()
+            : const LoginScreen(),
+      ),
+    ); // <-- මෙන්න මෙතන මේ ); කෑල්ල තමයි අඩුවෙලා තිබ්බේ
   }
 }
