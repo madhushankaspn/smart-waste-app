@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Login එක Success නම්, Admin ද සාමාන්‍ය කෙනෙක්ද කියලා බලනවා
       if (mounted) {
-        if (_emailController.text.trim() == 'ad@.com') {
+        if (_emailController.text.trim() == 'ad@sw.com') {
           // Admin නම් Admin Dashboard එකට යනවා
           Navigator.pushReplacement(
             context,

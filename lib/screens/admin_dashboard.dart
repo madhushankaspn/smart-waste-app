@@ -18,7 +18,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _currentIndex = 0;
 
   // ------------------------------------------------------------------
-  // අලුත් කරපු Team Assign Function එක (අලුත් යූසර්ලාටත් Points ලැබෙන විදිහට)
+  // Team Assign කරන Function එක
   // ------------------------------------------------------------------
   Future<void> _assignTeam(
     BuildContext context,
@@ -28,13 +28,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     String teamName,
   ) async {
     try {
-      // 1. රිපෝට් එක Update කරනවා
       await FirebaseFirestore.instance
           .collection('reports')
           .doc(reportId)
           .update({'status': 'Assigned', 'assignedTeam': teamName});
 
-      // 2. යූසර්ගේ Profile එක අරන් බලනවා
       DocumentReference userRef = FirebaseFirestore.instance
           .collection('users')
           .doc(reportUserId);
@@ -46,7 +44,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         currentPoints = data['points'] ?? 0;
       }
 
-      // Point එකතු කරනවා
       int newPoints = currentPoints + 1;
       String newLevel = 'Bronze';
 
@@ -57,11 +54,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       else if (newPoints >= 100)
         newLevel = 'Silver';
 
-      // 3. .set(merge: true) පාවිච්චි කරලා Profile එක නැත්නම් අලුතින් හදලා Points දෙනවා!
       await userRef.set({
         'points': newPoints,
         'level': newLevel,
-        'email': userEmail, // අලුත් යූසර්ගේ Email එකත් සේව් කරගන්නවා
+        'email': userEmail,
       }, SetOptions(merge: true));
 
       if (context.mounted) {
@@ -69,6 +65,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
           const SnackBar(
             content: Text('Team Assigned & Point Awarded!'),
             backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // අලුතින් එකතු කරපු: Report එක Reject කරන Function එක
+  // ------------------------------------------------------------------
+  Future<void> _rejectReport(BuildContext context, String reportId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('reports')
+          .doc(reportId)
+          .update({'status': 'Rejected'});
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Report Rejected!'),
+            backgroundColor: Colors.redAccent,
           ),
         );
       }
@@ -133,6 +156,56 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
               }).toList(),
         ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // අලුතින් එකතු කරපු: Reject කරන්න කලින් අහන Warning Dialog එක
+  // ------------------------------------------------------------------
+  void _showRejectDialog(BuildContext context, String reportId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'Reject Report',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to reject this report? The user will not receive any points.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _rejectReport(context, reportId);
+            },
+            child: const Text(
+              'Yes, Reject',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -215,16 +288,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         decoration: BoxDecoration(
                           color: status == 'Pending'
                               ? Colors.orange.shade50
+                              : status == 'Rejected'
+                              ? Colors.red.shade50
                               : Colors.green.shade50,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           status == 'Pending'
                               ? 'Status: Pending'
+                              : status == 'Rejected'
+                              ? 'Status: Rejected'
                               : 'Assigned: $assignedTeam',
                           style: TextStyle(
                             color: status == 'Pending'
                                 ? Colors.orange.shade800
+                                : status == 'Rejected'
+                                ? Colors.red.shade800
                                 : Colors.green.shade800,
                             fontWeight: FontWeight.bold,
                           ),
@@ -237,34 +316,59 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             const SizedBox(height: 24),
             if (status == 'Pending')
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _showRejectDialog(context, docId);
+                      },
+                      child: const Text(
+                        'Reject',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showAssignDialog(
-                      context,
-                      docId,
-                      report['userId'],
-                      report['userEmail'] ?? 'Unknown',
-                    );
-                  },
-                  child: const Text(
-                    'Assign Collection Team',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _showAssignDialog(
+                          context,
+                          docId,
+                          report['userId'],
+                          report['userEmail'] ?? 'Unknown',
+                        );
+                      },
+                      child: const Text(
+                        'Assign Team',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
           ],
         ),
@@ -349,12 +453,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ),
 
+        // අලුතින් 'Rejected' Filter එක දාලා තියෙනවා
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ['All', 'Pending', 'Assigned'].map((filter) {
+              children: ['All', 'Pending', 'Assigned', 'Rejected'].map((
+                filter,
+              ) {
                 bool isSelected = _selectedFilter == filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -367,13 +474,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           : FontWeight.normal,
                     ),
                     selected: isSelected,
-                    selectedColor: Colors.green,
+                    selectedColor: filter == 'Rejected'
+                        ? Colors.redAccent
+                        : Colors.green, // Reject එක තෝරද්දි රතු පාට වෙනවා
                     checkmarkColor: Colors.white,
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? Colors.green : Colors.grey.shade300,
+                        color: isSelected
+                            ? (filter == 'Rejected'
+                                  ? Colors.redAccent
+                                  : Colors.green)
+                            : Colors.grey.shade300,
                       ),
                     ),
                     onSelected: (selected) =>
@@ -486,6 +599,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
+                                        // Status Label එකටත් Reject පාට අදාළ කරලා තියෙනවා
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 8,
@@ -494,18 +608,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                           decoration: BoxDecoration(
                                             color: status == 'Pending'
                                                 ? Colors.orange.shade50
+                                                : status == 'Rejected'
+                                                ? Colors.red.shade50
                                                 : Colors.green.shade50,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                           ),
                                           child: Text(
-                                            status == 'Pending'
-                                                ? 'Pending'
-                                                : 'Assigned',
+                                            status,
                                             style: TextStyle(
                                               color: status == 'Pending'
                                                   ? Colors.orange.shade800
+                                                  : status == 'Rejected'
+                                                  ? Colors.red.shade800
                                                   : Colors.green.shade800,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
@@ -585,32 +701,91 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ],
                           const SizedBox(height: 16),
 
+                          // -------------------------------------------------------------
+                          // Reject සහ Assign Buttons දෙක ලස්සනට පෙළට තියෙනවා
+                          // -------------------------------------------------------------
                           if (status == 'Pending')
-                            SizedBox(
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                      side: const BorderSide(color: Colors.red),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onPressed: () =>
+                                        _showRejectDialog(context, document.id),
+                                    child: const Text(
+                                      'Reject',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    onPressed: () => _showAssignDialog(
+                                      context,
+                                      document.id,
+                                      report['userId'],
+                                      report['userEmail'] ?? 'Unknown',
+                                    ),
+                                    child: const Text(
+                                      'Assign Team',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else if (status == 'Rejected')
+                            Container(
                               width: double.infinity,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.cancel,
+                                    color: Colors.red,
+                                    size: 20,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Report Rejected',
+                                    style: TextStyle(
+                                      color: Colors.red.shade700,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                onPressed: () => _showAssignDialog(
-                                  context,
-                                  document.id,
-                                  report['userId'],
-                                  report['userEmail'] ?? 'Unknown',
-                                ),
-                                child: const Text(
-                                  'Assign Collection Team',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                ],
                               ),
                             )
                           else
@@ -675,9 +850,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
           double? lng = data['longitude'];
 
           if (lat != null && lng != null) {
-            Color pinColor = status == 'Pending' ? Colors.red : Colors.green;
+            Color pinColor = status == 'Pending'
+                ? Colors.orange
+                : status == 'Rejected'
+                ? Colors.red
+                : Colors.green;
             IconData pinIcon = status == 'Pending'
                 ? Icons.warning_rounded
+                : status == 'Rejected'
+                ? Icons.cancel
                 : Icons.local_shipping;
 
             mapMarkers.add(
@@ -743,7 +924,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             width: 16,
                             height: 16,
                             decoration: const BoxDecoration(
-                              color: Colors.red,
+                              color: Colors.orange,
                               shape: BoxShape.circle,
                             ),
                           ),
