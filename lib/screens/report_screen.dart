@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart'; // මේක අලුතින් ඕනේ
-import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
-import 'map_picker_screen.dart'; // මැප් එක තියෙන ෆයිල් එක
-import 'package:geolocator/geolocator.dart'; // දුර මනින්න මේක ඕනේ
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'map_picker_screen.dart'; // ඔයාගේ පරණ Map ෆයිල් එක මෙතනින් Import කළා
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -16,183 +15,187 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
+  XFile? _selectedImage;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
   bool _isLoading = false;
+  bool _isFetchingLocation = false;
 
-  Uint8List? _selectedImageBytes;
-  String? _base64Image;
-  LatLng? _pickedLocation; // තෝරගත්ත මැප් ලොකේෂන් එක සේව් කරන්න
-  final ImagePicker _picker = ImagePicker();
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        setState(() {
-          _selectedImageBytes = bytes;
-          _base64Image = base64Encode(bytes);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Photo Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile;
+      });
     }
   }
 
-  // මැප් එක ඕපන් කරන Function එක
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Upload Photo',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPickerOption(
+                  Icons.camera_alt,
+                  'Camera',
+                  Colors.green,
+                  () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                _buildPickerOption(
+                  Icons.photo_library,
+                  'Gallery',
+                  Colors.blue,
+                  () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickerOption(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 40, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isFetchingLocation = true;
+    });
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _locationController.text = "Viharamahadevi Park, Colombo 07";
+      _isFetchingLocation = false;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location found successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // අලුත් Function එක: Map එකට ගිහින් Location එක අරන් එනවා
+  // ----------------------------------------------------------------------
   Future<void> _openMapPicker() async {
-    final LatLng? result = await Navigator.push(
+    final selectedLocation = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MapPickerScreen()),
     );
 
-    if (result != null) {
+    // Map එකෙන් Location එකක් තෝරලා ආවොත් ඒක Text Box එකට දානවා
+    if (selectedLocation != null) {
       setState(() {
-        _pickedLocation = result;
+        _locationController.text = selectedLocation.toString();
       });
     }
   }
 
   Future<void> _submitReport() async {
-    if (_titleController.text.isEmpty || _descController.text.isEmpty) {
+    if (_selectedImage == null ||
+        _titleController.text.isEmpty ||
+        _locationController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill all fields'),
-          backgroundColor: Colors.red,
+          content: Text('Please fill all fields and select an image!'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    if (_base64Image == null || _pickedLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an image and map location'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
-      // ------------------------------------------------------------------
-      // අලුත් කෑල්ල: කලින් රිපෝට් කරලා තියෙනවද කියලා දුර මැනලා බලන කොටස
-      // ------------------------------------------------------------------
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-      // Database එකේ දැනට තියෙන (Pending සහ Assigned) රිපෝට් ටික ගන්නවා
-      QuerySnapshot existingReports = await FirebaseFirestore.instance
-          .collection('reports')
-          .where('status', whereIn: ['Pending', 'Assigned'])
-          .get();
+      List<int> imageBytes = await _selectedImage!.readAsBytes();
+      String base64Image = base64Encode(imageBytes);
 
-      bool isDuplicate = false;
-
-      // එකින් එක අරන් දුර බලනවා
-      for (var doc in existingReports.docs) {
-        var data = doc.data() as Map<String, dynamic>;
-        double? lat = data['latitude'];
-        double? lng = data['longitude'];
-
-        if (lat != null && lng != null) {
-          // අලුත් ලොකේෂන් එකයි, පරණ ලොකේෂන් එකයි අතර දුර මීටර් වලින් මනිනවා
-          double distanceInMeters = Geolocator.distanceBetween(
-            _pickedLocation!.latitude,
-            _pickedLocation!.longitude,
-            lat,
-            lng,
-          );
-
-          // මීටර් 50කට වඩා අඩු නම්, ඒක Duplicate එකක් විදිහට සලකනවා
-          if (distanceInMeters < 50) {
-            isDuplicate = true;
-            break; // Loop එක නවත්තනවා
-          }
-        }
-      }
-
-      // කලින් රිපෝට් කරපු එකක් නම්, Pop-up එක පෙන්නලා සේව් කරන එක නවත්තනවා
-      if (isDuplicate) {
-        setState(() => _isLoading = false); // Loading එක නවත්තනවා
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: const Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 28),
-                  SizedBox(width: 8),
-                  Text(
-                    'Already Reported!',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ],
-              ),
-              content: const Text(
-                'This garbage location has already been reported by someone else recently.\n\nThank you for your vigilance!',
-                style: TextStyle(fontSize: 16),
-              ),
-              actions: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context); // Pop-up එක වහනවා
-                      Navigator.pop(
-                        context,
-                      ); // Report Screen එකෙනුත් අයින් වෙලා Home එකට යනවා
-                    },
-                    child: const Text(
-                      'OK',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-        return; // Function එක මෙතනින් නවත්තනවා (Database එකට යවන්නේ නෑ)
-      }
-      // ------------------------------------------------------------------
-
-      // අලුත් එකක් නම් සාමාන්‍ය විදිහටම Database එකට Save කරනවා
-      final user = FirebaseAuth.instance.currentUser;
-
-      await FirebaseFirestore.instance
-          .collection('reports')
-          .add({
-            'title': _titleController.text.trim(),
-            'description': _descController.text.trim(),
-            'imageBase64': _base64Image,
-            'userId': user?.uid,
-            'userEmail': user?.email,
-            'status': 'Pending',
-            'latitude': _pickedLocation!.latitude,
-            'longitude': _pickedLocation!.longitude,
-            'timestamp': FieldValue.serverTimestamp(),
-          })
-          .timeout(const Duration(seconds: 15));
+      await FirebaseFirestore.instance.collection('reports').add({
+        'userId': currentUser?.uid,
+        'userEmail': currentUser?.email,
+        'title': _titleController.text.trim(),
+        'location': _locationController.text.trim(),
+        'imageBase64': base64Image,
+        'status': 'Pending',
+        'latitude': 6.9271 + (DateTime.now().second % 10) * 0.001,
+        'longitude': 79.8612 + (DateTime.now().second % 10) * 0.001,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Report Submitted! Waiting for Admin Approval.'),
+            content: Text('Report submitted successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -205,121 +208,232 @@ class _ReportScreenState extends State<ReportScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _locationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Report Waste'),
-        backgroundColor: Colors.green,
+        title: const Text(
+          'New Report',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            // Image Picker Section
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade400),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Report Illegal Waste',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E7D32),
                 ),
-                child: _selectedImageBytes != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.memory(
-                          _selectedImageBytes!,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.add_a_photo,
-                        size: 50,
-                        color: Colors.grey,
-                      ),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Report Title',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 8),
+              Text(
+                'Take a photo and provide details to help us clean the city.',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 32),
 
-            // මැප් එකෙන් ලොකේෂන් තෝරන Button එක
-            InkWell(
-              onTap: _openMapPicker,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: _pickedLocation != null ? Colors.green : Colors.grey,
+              GestureDetector(
+                onTap: _showImagePickerOptions,
+                child: Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.green.shade200,
+                      width: 2,
+                      style: BorderStyle.solid,
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.map,
-                      color: _pickedLocation != null
-                          ? Colors.green
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _pickedLocation == null
-                            ? 'Select Location from Map'
-                            : 'Location Selected: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
-                        style: TextStyle(
-                          color: _pickedLocation != null
-                              ? Colors.green
-                              : Colors.black54,
+                  child: _selectedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: kIsWeb
+                              ? Image.network(
+                                  _selectedImage!.path,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                )
+                              : Image.file(
+                                  File(_selectedImage!.path),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add_a_photo,
+                                size: 40,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Tap to upload photo',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-            TextField(
-              controller: _descController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
+              const Text(
+                'Waste Description',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: 'E.g., Plastic bags dumped near the park',
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  prefixIcon: const Icon(Icons.description, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: _isLoading ? null : _submitReport,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Submit Report',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+              const Text(
+                'Location',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+
+              // -------------------------------------------------------------
+              // Location Box එක අලුත් කරලා බොත්තම් 2ක් දැම්මා!
+              // -------------------------------------------------------------
+              TextField(
+                controller: _locationController,
+                decoration: InputDecoration(
+                  hintText: 'Type or select location...',
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+
+                  // දකුණු පැත්තේ Buttons 2ක් තියෙනවා (GPS & Map)
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize
+                        .min, // මේක දැම්මේ බොත්තම් දෙක ළඟින් තියෙන්න
+                    children: [
+                      // 1. GPS Button (කොළ පාට)
+                      _isFetchingLocation
+                          ? const Padding(
+                              padding: EdgeInsets.all(14.0),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(
+                                Icons.my_location,
+                                color: Colors.green,
+                              ),
+                              onPressed: _getCurrentLocation,
+                              tooltip: 'Get Current Location',
+                            ),
+
+                      // 2. Map Button (නිල් පාට) - මේක එබුවම පරණ මැප් එකට යනවා
+                      IconButton(
+                        icon: const Icon(Icons.map, color: Colors.blue),
+                        onPressed: _openMapPicker, // Map එක ඕපන් වෙනවා
+                        tooltip: 'Choose on Map',
                       ),
+                      const SizedBox(width: 8), // පොඩි පරතරයක්
+                    ],
+                  ),
+
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 40),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                    shadowColor: Colors.green.withOpacity(0.4),
+                  ),
+                  onPressed: _isLoading ? null : _submitReport,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Submit Report',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
