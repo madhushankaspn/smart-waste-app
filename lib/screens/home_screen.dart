@@ -324,204 +324,598 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildNextCollectionCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.shade100, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+  // ==============================================
+  // TAB 1: අලුත් ලස්සන "Home" Tab එක (Reference Image එක වගේ)
+  // ==============================================
+  Widget _buildHomeTab(
+    String email,
+    int points,
+    String level,
+    List<DocumentSnapshot> myReports,
+  ) {
+    String userName = email.isNotEmpty ? email.split('@')[0] : 'User';
+    userName = userName.isNotEmpty
+        ? userName[0].toUpperCase() + userName.substring(1)
+        : 'User';
+
+    // Progress calculation
+    int nextLevelPoints = points >= 500 ? 1000 : (points >= 100 ? 500 : 100);
+    double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Header Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.location_city, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(
-                    'My Area: $_userArea',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.orange.shade200,
+                        child: Text(
+                          userName[0],
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Text(
+                          level.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'HELLO CITIZEN',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text(
+                        'Hello, $userName! 👋',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // 2. Dark Green Wallet Card
+          GestureDetector(
+            onTap: () => setState(() => _currentIndex = 1), // Rewards Tab
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0B2E13), Color(0xFF1B5E20)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'WALLET BALANCE',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.stars_rounded,
+                          color: Colors.greenAccent,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '$points',
+                        style: const TextStyle(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 8.0, left: 6.0),
+                        child: Text(
+                          'PTS',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.greenAccent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'NEXT MILESTONE',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Target: Cinnamon Grand Dinner',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      color: Colors.greenAccent,
+                      minHeight: 8,
                     ),
                   ),
                 ],
               ),
-              InkWell(
-                onTap: _showChangeAreaDialog,
-                child: const Text(
-                  'Change',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Divider(height: 1, thickness: 1),
-          ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 16),
+
+          // 3. Black Promo Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1D21),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
-                child: const Icon(
-                  Icons.calendar_month,
-                  color: Colors.green,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Next Garbage Collection',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Tomorrow, 08:00 AM',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.recycling,
-                          size: 14,
-                          color: Colors.green.shade700,
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Plastic & Paper',
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'FEATURED REWARD',
                           style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontSize: 12,
+                            color: Colors.greenAccent,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_active_outlined,
-                  color: Colors.green,
-                ),
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Reminder set for tomorrow morning!'),
-                    backgroundColor: Colors.green,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Cinnamon Grand\n50% Discount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Redeem for 1,000 Pts',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRewardCard({
-    required String title,
-    required String points,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required bool isUnlocked,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
-        border: Border.all(
-          color: isUnlocked ? color : Colors.grey.shade300,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isUnlocked ? color : Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? color : Colors.grey.shade600,
-                      ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    Text(
-                      points,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                  ),
+                  onPressed: () => setState(() => _currentIndex = 1),
+                  child: const Text(
+                    'Redeem Now',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
           ),
-          if (isUnlocked) const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(height: 24),
+
+          // 4. Weekly Impact & Recent Reports Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Weekly Impact Box
+              Expanded(
+                flex: 2,
+                child: Container(
+                  height: 160,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.08),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'WEEKLY\nIMPACT',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${(myReports.length * 2.5).toStringAsFixed(1)}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 4, left: 2),
+                            child: Text(
+                              'KG',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      // Fake Chart Bar
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          Container(
+                            width: 12,
+                            height: 35,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          Container(
+                            width: 14,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.greenAccent.withOpacity(0.5),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 12,
+                            height: 25,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          Container(
+                            width: 12,
+                            height: 15,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Recent Reports List
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'RECENT REPORTS',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (myReports.isEmpty)
+                      const Text(
+                        'No reports yet.',
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    else
+                      ...myReports.take(2).map((doc) {
+                        var report = doc.data() as Map<String, dynamic>;
+                        bool isPending = report['status'] == 'Pending';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isPending
+                                      ? Colors.orange.shade50
+                                      : Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  isPending
+                                      ? Icons.pending_actions
+                                      : Icons.check_circle,
+                                  color: isPending
+                                      ? Colors.orange
+                                      : Colors.green,
+                                  size: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      report['title'] ?? 'Report',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      report['status'] ?? 'Pending',
+                                      style: TextStyle(
+                                        color: isPending
+                                            ? Colors.orange
+                                            : Colors.green,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          // 5. Daily Eco-Insights Banner
+          const Text(
+            'Daily Eco-Insights',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9), // Light Green
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lightbulb,
+                    color: Colors.green,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Recycling one glass bottle saves enough energy to power a lightbulb for 4 hours!',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Read More ->',
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 100), // Space for FAB
         ],
       ),
     );
   }
 
+  // ==============================================
+  // TAB 2: Rewards Tab
+  // ==============================================
   Widget _buildRewardsTab(int points, String level, Color levelColor) {
     int nextLevelPoints = 100;
     String nextLevelName = 'Silver';
@@ -674,6 +1068,256 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildRewardCard({
+    required String title,
+    required String points,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool isUnlocked,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isUnlocked ? color.withOpacity(0.1) : Colors.white,
+        border: Border.all(
+          color: isUnlocked ? color : Colors.grey.shade300,
+          width: 2,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isUnlocked ? color : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? color : Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      points,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                ),
+              ],
+            ),
+          ),
+          if (isUnlocked) const Icon(Icons.check_circle, color: Colors.green),
+        ],
+      ),
+    );
+  }
+
+  // ==============================================
+  // TAB 3: Leaderboard Tab
+  // ==============================================
+  Widget _buildLeaderboardTab(String currentUserId) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(
+            top: 40,
+            left: 20,
+            right: 20,
+            bottom: 30,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade700, Colors.green.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.emoji_events, size: 70, color: Colors.yellow),
+              SizedBox(height: 10),
+              Text(
+                "Leaderboard",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Top Eco-Warriors in the City",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .orderBy('points', descending: true)
+                .limit(50)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.green),
+                );
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                return const Center(
+                  child: Text(
+                    "No users found.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+
+              var users = snapshot.data!.docs;
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  var userDoc = users[index];
+                  var userData = userDoc.data() as Map<String, dynamic>;
+
+                  int points = userData['points'] ?? 0;
+                  String email = userData['email'] ?? 'Eco Hero';
+                  String userName = email.split('@')[0];
+                  bool isCurrentUser = userDoc.id == currentUserId;
+
+                  Color rankColor = Colors.grey.shade400;
+                  IconData rankIcon = Icons.military_tech;
+                  if (index == 0) {
+                    rankColor = Colors.amber;
+                    rankIcon = Icons.workspace_premium;
+                  } else if (index == 1) {
+                    rankColor = Colors.grey.shade400;
+                    rankIcon = Icons.workspace_premium;
+                  } else if (index == 2) {
+                    rankColor = Colors.brown.shade300;
+                    rankIcon = Icons.workspace_premium;
+                  }
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: isCurrentUser ? 4 : 1,
+                    color: isCurrentUser ? Colors.green.shade50 : Colors.white,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '#${index + 1}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: index < 3 ? rankColor : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          CircleAvatar(
+                            backgroundColor: index < 3
+                                ? rankColor.withOpacity(0.2)
+                                : Colors.grey.shade100,
+                            child: index < 3
+                                ? Icon(rankIcon, color: rankColor)
+                                : Text(
+                                    userName[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                      title: Text(
+                        isCurrentUser ? "You ($userName)" : userName,
+                        style: TextStyle(
+                          fontWeight: isCurrentUser
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '$points pts',
+                          style: TextStyle(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  // ==============================================
+  // TAB 4: Profile Tab
+  // ==============================================
   Widget _buildStatCard(
     String title,
     String value,
@@ -1002,181 +1646,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLeaderboardTab(String currentUserId) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.only(
-            top: 40,
-            left: 20,
-            right: 20,
-            bottom: 30,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade700, Colors.green.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.4),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: const Column(
-            children: [
-              Icon(Icons.emoji_events, size: 70, color: Colors.yellow),
-              SizedBox(height: 10),
-              Text(
-                "Leaderboard",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                "Top Eco-Warriors in the City",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-
-        Expanded(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .orderBy('points', descending: true)
-                .limit(50)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.green),
-                );
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                return const Center(
-                  child: Text(
-                    "No users found.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                );
-
-              var users = snapshot.data!.docs;
-
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  var userDoc = users[index];
-                  var userData = userDoc.data() as Map<String, dynamic>;
-
-                  int points = userData['points'] ?? 0;
-                  String email = userData['email'] ?? 'Eco Hero';
-                  String userName = email.split('@')[0];
-                  bool isCurrentUser = userDoc.id == currentUserId;
-
-                  Color rankColor = Colors.grey.shade400;
-                  IconData rankIcon = Icons.military_tech;
-                  if (index == 0) {
-                    rankColor = Colors.amber;
-                    rankIcon = Icons.workspace_premium;
-                  } else if (index == 1) {
-                    rankColor = Colors.grey.shade400;
-                    rankIcon = Icons.workspace_premium;
-                  } else if (index == 2) {
-                    rankColor = Colors.brown.shade300;
-                    rankIcon = Icons.workspace_premium;
-                  }
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: isCurrentUser ? 4 : 1,
-                    color: isCurrentUser ? Colors.green.shade50 : Colors.white,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '#${index + 1}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: index < 3 ? rankColor : Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          CircleAvatar(
-                            backgroundColor: index < 3
-                                ? rankColor.withOpacity(0.2)
-                                : Colors.grey.shade100,
-                            child: index < 3
-                                ? Icon(rankIcon, color: rankColor)
-                                : Text(
-                                    userName[0].toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                          ),
-                        ],
-                      ),
-                      title: Text(
-                        isCurrentUser ? "You ($userName)" : userName,
-                        style: TextStyle(
-                          fontWeight: isCurrentUser
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 16,
-                        ),
-                      ),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$points pts',
-                          style: TextStyle(
-                            color: Colors.green.shade800,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 40),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -1201,9 +1670,6 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-            // --------------------------------------------------------------------------
-            // අලුතින් වෙනස් කරපු කොටස (Error එක හදන්න) - මෙතන තමයි Fix එක තියෙන්නේ
-            // --------------------------------------------------------------------------
             Map<String, dynamic> userData = {};
             if (userSnapshot.data!.exists &&
                 userSnapshot.data!.data() != null) {
@@ -1213,7 +1679,6 @@ class _HomeScreenState extends State<HomeScreen> {
             int points = userData['points'] ?? 0;
             String level = userData['level'] ?? 'Bronze';
             Color levelColor = _getLevelColor(level);
-            // --------------------------------------------------------------------------
 
             var myReports = reportsSnapshot.data!.docs.where((doc) {
               var data = doc.data() as Map<String, dynamic>;
@@ -1228,7 +1693,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
-              appBar: _currentIndex == 2
+
+              // Appbar එක සම්පූර්ණයෙන්ම අයින් කරලා, Custom Header එකක් Home Tab එකේ දැම්මා.
+              appBar: (_currentIndex == 0 || _currentIndex == 2)
                   ? null
                   : AppBar(
                       title: const Text(
@@ -1283,314 +1750,59 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
 
-              body: _currentIndex == 0
-                  ? Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () => setState(() => _currentIndex = 1),
-                          child: Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.all(16),
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  levelColor,
-                                  levelColor.withOpacity(0.7),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: levelColor.withOpacity(0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _getLevelIcon(level),
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '$level Level',
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'View Rewards Journey 🎁',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  children: [
-                                    const Text(
-                                      'Points',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      '$points',
-                                      style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        _buildNextCollectionCard(),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'My Recent Reports',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: myReports.isEmpty
-                              ? const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.inbox,
-                                        size: 60,
-                                        color: Colors.grey,
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        'You have no reports yet.',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : ListView.builder(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  itemCount: myReports.length,
-                                  itemBuilder: (context, index) {
-                                    var report =
-                                        myReports[index].data()
-                                            as Map<String, dynamic>;
-                                    String? base64String =
-                                        report['imageBase64'];
-                                    return Card(
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      elevation: 1,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: Row(
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: Container(
-                                                width: 70,
-                                                height: 70,
-                                                color: Colors.grey.shade200,
-                                                child:
-                                                    base64String != null &&
-                                                        base64String.isNotEmpty
-                                                    ? Image.memory(
-                                                        base64Decode(
-                                                          base64String,
-                                                        ),
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : const Icon(
-                                                        Icons
-                                                            .image_not_supported,
-                                                        color: Colors.grey,
-                                                      ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    report['title'] ??
-                                                        'No Title',
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.location_on,
-                                                        size: 14,
-                                                        color: Colors.grey,
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Expanded(
-                                                        child: Text(
-                                                          report['location'] ??
-                                                              'Unknown',
-                                                          style:
-                                                              const TextStyle(
-                                                                fontSize: 13,
-                                                                color:
-                                                                    Colors.grey,
-                                                              ),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 4,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          report['status'] ==
-                                                              'Pending'
-                                                          ? Colors
-                                                                .orange
-                                                                .shade50
-                                                          : Colors
-                                                                .green
-                                                                .shade50,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            8,
-                                                          ),
-                                                    ),
-                                                    child: Text(
-                                                      report['status'] ??
-                                                          'Pending',
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color:
-                                                            report['status'] ==
-                                                                'Pending'
-                                                            ? Colors
-                                                                  .orange
-                                                                  .shade800
-                                                            : Colors
-                                                                  .green
-                                                                  .shade800,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    )
-                  : _currentIndex == 1
-                  ? _buildRewardsTab(points, level, levelColor)
-                  : _currentIndex == 2
-                  ? _buildLeaderboardTab(currentUser?.uid ?? '')
-                  : _buildProfileTab(
-                      currentUser?.email ?? '',
-                      points,
-                      level,
-                      levelColor,
-                      myReports.length,
-                    ),
+              body: SafeArea(
+                child: _currentIndex == 0
+                    ? _buildHomeTab(
+                        currentUser?.email ?? '',
+                        points,
+                        level,
+                        myReports,
+                      )
+                    : _currentIndex == 1
+                    ? _buildRewardsTab(points, level, levelColor)
+                    : _currentIndex == 2
+                    ? _buildLeaderboardTab(currentUser?.uid ?? '')
+                    : _buildProfileTab(
+                        currentUser?.email ?? '',
+                        points,
+                        level,
+                        levelColor,
+                        myReports.length,
+                      ),
+              ),
 
               floatingActionButtonLocation:
                   FloatingActionButtonLocation.centerDocked,
-              floatingActionButton: FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ReportScreen(),
+              floatingActionButton: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1DD15D).withOpacity(0.4),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                      offset: const Offset(0, 5),
                     ),
-                  );
-                },
-                backgroundColor: Colors.green,
-                elevation: 4,
-                child: const Icon(
-                  Icons.add_a_photo,
-                  color: Colors.white,
-                  size: 28,
+                  ],
+                ),
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReportScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: const Color(
+                    0xFF1DD15D,
+                  ), // ෆොටෝ එකේ තියෙන Neon Green පාට
+                  elevation: 0,
+                  child: const Icon(
+                    Icons.add_a_photo,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
 
@@ -1658,9 +1870,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-
                       const SizedBox(width: 40),
-
                       MaterialButton(
                         minWidth: 40,
                         onPressed: () => setState(() => _currentIndex = 2),
