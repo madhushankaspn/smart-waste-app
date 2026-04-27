@@ -10,6 +10,7 @@ import '../translations.dart'; // අලුතින් දැම්මා
 import 'login_screen.dart';
 import 'report_screen.dart';
 import 'report_history_screen.dart'; // අලුතින් දැම්මා
+import 'waste_guide_screen.dart'; // අලුතින් දැම්මා
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
