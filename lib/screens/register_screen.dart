@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_screen.dart';
+import 'login_screen.dart'; // අලුතින් දැම්මා (Login එකට යන්න ඕන නිසා)
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -55,13 +55,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'points': 0,
               'level': 'Bronze',
             });
+
+        // 3. අලුත් වෙනස: හැදුණු ගමන් ඉබේම Login වෙන එකෙන් Sign Out කරනවා
+        await FirebaseAuth.instance.signOut();
       }
 
       if (mounted) {
-        // රෙජිස්ටර් වුණාට පස්සේ කෙලින්ම Home Screen එකට යනවා
+        // 4. "Success" මැසේජ් එක පෙන්වලා ආපහු Login Screen එකට යවනවා
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration Successful! Please log in.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
     } on FirebaseAuthException catch (e) {

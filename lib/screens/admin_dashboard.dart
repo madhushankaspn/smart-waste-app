@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart'; // Clipboard එකට Copy කරන්න මේක ඕනේ
 import 'dart:convert';
 import 'login_screen.dart';
 
@@ -24,7 +25,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     'Team Gamma (Truck 3)',
   ];
 
-  // Settings වලට ඕන කරන Variables
   bool _pushNotifications = true;
   bool _autoAssign = false;
 
@@ -1528,6 +1528,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   color: Colors.white,
                   child: Column(
                     children: [
+                      // 1. Export CSV Button (දැන් වැඩ කරනවා!)
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
@@ -1544,20 +1545,59 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           "Export Reports (CSV)",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        trailing: const Icon(
-                          Icons.download,
-                          color: Colors.grey,
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Downloading CSV...'),
-                              backgroundColor: Colors.purple,
-                            ),
-                          );
+                        trailing: const Icon(Icons.copy, color: Colors.grey),
+                        onTap: () async {
+                          try {
+                            // Database එකෙන් Data ගන්නවා
+                            var snapshot = await FirebaseFirestore.instance
+                                .collection('reports')
+                                .get();
+                            String csvData =
+                                "Report ID,Title,Location,Status,User Email\n";
+                            for (var doc in snapshot.docs) {
+                              var data = doc.data() as Map<String, dynamic>;
+                              csvData +=
+                                  "${doc.id},${data['title']},${data['location']},${data['status']},${data['userEmail']}\n";
+                            }
+                            // ඒ ටික Clipboard එකට Copy කරනවා
+                            await Clipboard.setData(
+                              ClipboardData(text: csvData),
+                            );
+
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Data Exported!"),
+                                  content: const Text(
+                                    "All reports have been copied to your clipboard in CSV format. You can now Paste (Ctrl+V) it directly into Excel or a Text file.",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        "OK",
+                                        style: TextStyle(color: Colors.green),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted)
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error exporting data: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                          }
                         },
                       ),
                       const Divider(height: 1, indent: 60, endIndent: 20),
+
+                      // 2. Clear Old Data Button (දැන් වැඩ කරනවා!)
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
@@ -1578,10 +1618,71 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ),
                         ),
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Old data cleared!'),
-                              backgroundColor: Colors.red,
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text(
+                                "Clear Completed Reports?",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              content: const Text(
+                                "This will permanently delete all reports that are marked as 'Assigned' or 'Rejected'.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    Navigator.pop(context); // Dialog එක වහනවා
+                                    try {
+                                      // Status එක Assigned හෝ Rejected ඒවා විතරක් මකනවා
+                                      var snapshot = await FirebaseFirestore
+                                          .instance
+                                          .collection('reports')
+                                          .where(
+                                            'status',
+                                            whereIn: ['Assigned', 'Rejected'],
+                                          )
+                                          .get();
+                                      for (var doc in snapshot.docs) {
+                                        await doc.reference.delete();
+                                      }
+                                      if (context.mounted)
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Old data cleared successfully!',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                    } catch (e) {
+                                      if (context.mounted)
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Error clearing data: $e',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                    }
+                                  },
+                                  child: const Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -1641,8 +1742,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-
-      // Settings ටැබ් එකේදි අපි Custom Header එකක් හදපු නිසා, සාමාන්‍ය AppBar එක අයින් කරනවා
       appBar: _currentIndex == 3
           ? null
           : AppBar(
@@ -1656,15 +1755,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
               backgroundColor: Colors.white,
               elevation: 0,
             ),
-
       body: _currentIndex == 0
           ? _buildReportsTab()
           : _currentIndex == 1
           ? _buildLiveMapTab()
           : _currentIndex == 2
           ? _buildTeamsTab()
-          : _buildSettingsTab(), // අලුත් Settings Tab එක
-
+          : _buildSettingsTab(),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
