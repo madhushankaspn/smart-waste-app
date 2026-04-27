@@ -11,6 +11,7 @@ import 'login_screen.dart';
 import 'report_screen.dart';
 import 'report_history_screen.dart'; // අලුතින් දැම්මා
 import 'waste_guide_screen.dart'; // අලුතින් දැම්මා
+import 'eco_shorts_screen.dart'; // අලුතින් දැම්මා
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1081,6 +1082,102 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 32),
+
+          // --------------------------------------------------
+          // 1. අලුත් Eco Shorts Banner එක
+          // --------------------------------------------------
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EcoShortsScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF6A11CB),
+                    Color(0xFF2575FC),
+                  ], // ලස්සන දම්-නිල් Gradient එකක්
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2575FC).withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Eco Shorts 🎬',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Watch & learn how to save the planet!',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Watch',
+                      style: TextStyle(
+                        color: Color(0xFF2575FC),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // --------------------------------------------------
+          // 2. පරණ Daily Eco-Insights (Waste Guide) Banner එක
+          // --------------------------------------------------
           Text(
             AppText.get('daily_insights'),
             style: const TextStyle(
@@ -1091,7 +1188,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
 
-          // මෙන්න මෙතන ඉඳන් තමයි අලුත් වෙනස තියෙන්නේ (GestureDetector එකක් දැම්මා)
           GestureDetector(
             onTap: () {
               Navigator.push(
