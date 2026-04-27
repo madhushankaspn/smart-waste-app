@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // අලුතින් දැම්මා (Database එකෙන් Role එක ගන්න)
 import 'home_screen.dart';
 import 'admin_dashboard.dart';
 import 'register_screen.dart';
@@ -23,22 +24,42 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      // 1. Firebase Auth හරහා ඊමේල්, පාස්වර්ඩ් දීලා ලොග් වෙනවා
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
-      if (mounted) {
-        if (_emailController.text.trim() == 'ad@sw.com') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminDashboard()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
+      if (mounted && userCredential.user != null) {
+        // 2. Database එකෙන් මේ User ගේ විස්තර (Document එක) ගන්නවා
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        String userRole = 'user'; // Default විදිහට user කියලා ගන්නවා
+
+        if (userDoc.exists && userDoc.data() != null) {
+          var userData = userDoc.data() as Map<String, dynamic>;
+          userRole =
+              userData['role'] ??
+              'user'; // Database එකේ 'role' එකක් තියෙනවද බලනවා
+        }
+
+        // 3. Role එක 'admin' නම් Admin Dashboard එකට, නැත්නම් Home Screen එකට යවනවා!
+        if (mounted) {
+          if (userRole == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminDashboard()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          }
         }
       }
     } on FirebaseAuthException catch (e) {
