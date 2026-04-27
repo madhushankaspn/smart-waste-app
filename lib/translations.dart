@@ -50,7 +50,7 @@ class AppText {
       'rewards': 'තෑගි',
       'leaderboard': 'ප්‍රමුඛයන්',
       'profile': 'ගිණුම',
-      'hello_citizen': 'ආයුබෝවන් පුරවැසියා',
+      'hello_citizen': 'ආයුබෝවන්',
       'hello': 'ආයුබෝවන්',
       'wallet_balance': 'ඔබේ ලකුණු',
       'points': 'ලකුණු',
