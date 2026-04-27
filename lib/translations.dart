@@ -56,7 +56,7 @@ class AppText {
       'points': 'ලකුණු',
       'pts': 'ලකුණු',
       'next_milestone': 'මීළඟ ඉලක්කය',
-      'target': 'ඉලක්කය: සිනමන් ග්‍රෑන්ඩ් රාත්‍රී භෝජනය',
+      'target': 'ඉලක්කය: Silver Level',
       'next_collection': 'මීළඟ කසළ එකතු කිරීම',
       'tomorrow': 'හෙට, උදේ 08:00',
       'plastic_paper': 'ප්ලාස්ටික් සහ කඩදාසි',
