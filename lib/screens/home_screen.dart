@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../translations.dart'; // අලුතින් දැම්මා
 import 'login_screen.dart';
 import 'report_screen.dart';
+import 'report_history_screen.dart'; // අලුතින් දැම්මා
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -2000,7 +2001,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           size: 16,
                           color: Colors.grey,
                         ),
-                        onTap: () => setState(() => _currentIndex = 0),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ReportHistoryScreen(),
+                            ),
+                          );
+                        },
                       ),
                       const Divider(height: 1, indent: 20, endIndent: 20),
                       ListTile(
