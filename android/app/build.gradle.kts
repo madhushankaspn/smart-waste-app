@@ -10,7 +10,7 @@ plugins {
 
 android {
   namespace = "com.example.swm_app"
-compileSdk = 34
+compileSdk = 36
 ndkVersion = flutter.ndkVersion
 
     compileOptions {
