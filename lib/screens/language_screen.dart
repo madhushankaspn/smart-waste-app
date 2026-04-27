@@ -17,6 +17,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', _selectedLanguage);
 
+    AppText.lang = _selectedLanguage; // අලුත් පේළිය: තෝරපු භාෂාව සෙට් කරනවා
+
     if (mounted) {
       Navigator.pushReplacement(
         context,

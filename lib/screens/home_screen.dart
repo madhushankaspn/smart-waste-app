@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../translations.dart'; // අලුතින් දැම්මා
 import 'login_screen.dart';
 import 'report_screen.dart';
 
@@ -35,9 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // -------------------------------------------------------------
-  // Profile Update Functions
-  // -------------------------------------------------------------
   Future<void> _updateName(String newName) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     await FirebaseFirestore.instance
@@ -62,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('users')
           .doc(currentUser?.uid)
           .update({'profilePhoto': base64Image});
-
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -126,20 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // -------------------------------------------------------------
-  // General Functions
-  // -------------------------------------------------------------
   Future<void> _changeArea(String newArea) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_area', newArea);
     setState(() => _userArea = newArea);
-    if (mounted)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Area updated to $newArea!'),
-          backgroundColor: Colors.green,
-        ),
-      );
   }
 
   void _showChangeAreaDialog() {
@@ -154,35 +141,37 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Select Your Area',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          AppText.get('my_area'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: areas.map((area) {
-            return ListTile(
-              leading: Icon(
-                Icons.location_city,
-                color: _userArea == area ? Colors.green : Colors.grey,
-              ),
-              title: Text(
-                area,
-                style: TextStyle(
-                  fontWeight: _userArea == area
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+          children: areas
+              .map(
+                (area) => ListTile(
+                  leading: Icon(
+                    Icons.location_city,
+                    color: _userArea == area ? Colors.green : Colors.grey,
+                  ),
+                  title: Text(
+                    area,
+                    style: TextStyle(
+                      fontWeight: _userArea == area
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: _userArea == area
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeArea(area);
+                  },
                 ),
-              ),
-              trailing: _userArea == area
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : null,
-              onTap: () {
-                Navigator.pop(context);
-                _changeArea(area);
-              },
-            );
-          }).toList(),
+              )
+              .toList(),
         ),
       ),
     );
@@ -256,12 +245,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Great job! The waste report is approved.',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -346,7 +329,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: unreadNotifications.length,
                   itemBuilder: (context, index) {
                     var doc = unreadNotifications[index];
-                    var data = doc.data() as Map<String, dynamic>;
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -363,9 +345,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: const Text(
                         'Report Approved!',
                         style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        'Your report at ${data['location'] ?? 'a location'} was assigned.',
                       ),
                       trailing: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -389,9 +368,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // -------------------------------------------------------------
-  // Theme & Styles
-  // -------------------------------------------------------------
   Color _getLevelColor(String level) {
     switch (level) {
       case 'Silver':
@@ -473,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Icon(Icons.location_city, size: 16, color: Colors.grey),
                   const SizedBox(width: 8),
                   Text(
-                    'My Area: $_userArea',
+                    '${AppText.get('my_area')}: $_userArea',
                     style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 13,
@@ -484,9 +460,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               InkWell(
                 onTap: _showChangeAreaDialog,
-                child: const Text(
-                  'Change',
-                  style: TextStyle(
+                child: Text(
+                  AppText.get('change'),
+                  style: const TextStyle(
                     color: Colors.green,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -518,18 +494,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Next Garbage Collection',
-                      style: TextStyle(
+                    Text(
+                      AppText.get('next_collection'),
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Tomorrow, 08:00 AM',
-                      style: TextStyle(
+                    Text(
+                      AppText.get('tomorrow'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -545,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Plastic & Paper',
+                          AppText.get('plastic_paper'),
                           style: TextStyle(
                             color: Colors.green.shade700,
                             fontSize: 12,
@@ -562,12 +538,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.notifications_active_outlined,
                   color: Colors.green,
                 ),
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Reminder set for tomorrow morning!'),
-                    backgroundColor: Colors.green,
-                  ),
-                ),
+                onPressed: () {},
               ),
             ],
           ),
@@ -594,7 +565,6 @@ class _HomeScreenState extends State<HomeScreen> {
     displayName = displayName.isNotEmpty
         ? displayName[0].toUpperCase() + displayName.substring(1)
         : 'User';
-
     int nextLevelPoints = points >= 500 ? 1000 : (points >= 100 ? 500 : 100);
     double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
 
@@ -653,9 +623,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'HELLO CITIZEN',
-                        style: TextStyle(
+                      Text(
+                        AppText.get('hello_citizen'),
+                        style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -663,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        'Hello, $displayName! 👋',
+                        '${AppText.get('hello')}, $displayName! 👋',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -746,9 +716,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'WALLET BALANCE',
-                        style: TextStyle(
+                      Text(
+                        AppText.get('wallet_balance'),
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -781,11 +751,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0, left: 6.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, left: 6.0),
                         child: Text(
-                          'PTS',
-                          style: TextStyle(
+                          AppText.get('pts'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.greenAccent,
@@ -798,9 +768,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'NEXT MILESTONE',
-                        style: TextStyle(
+                      Text(
+                        AppText.get('next_milestone'),
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -817,9 +787,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Target: Silver Level at 100 Points',
-                    style: TextStyle(
+                  Text(
+                    AppText.get('target'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -873,9 +843,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.greenAccent.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'FEATURED REWARD',
-                          style: TextStyle(
+                        child: Text(
+                          AppText.get('featured_reward'),
+                          style: const TextStyle(
                             color: Colors.greenAccent,
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -892,14 +862,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Redeem for 1,000 Pts',
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 12,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -912,9 +874,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   onPressed: () => setState(() => _currentIndex = 1),
-                  child: const Text(
-                    'Redeem Now',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  child: Text(
+                    AppText.get('redeem_now'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -944,9 +909,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'WEEKLY\nIMPACT',
-                        style: TextStyle(
+                      Text(
+                        AppText.get('weekly_impact'),
+                        style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -964,11 +929,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 4, left: 2),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4, left: 2),
                             child: Text(
-                              'KG',
-                              style: TextStyle(
+                              AppText.get('kg'),
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.bold,
@@ -985,14 +950,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             width: 12,
                             height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          Container(
-                            width: 12,
-                            height: 35,
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(6),
@@ -1020,14 +977,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
-                          Container(
-                            width: 12,
-                            height: 15,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
                         ],
                       ),
                     ],
@@ -1040,9 +989,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'RECENT REPORTS',
-                      style: TextStyle(
+                    Text(
+                      AppText.get('recent_reports'),
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -1051,9 +1000,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
                     if (myReports.isEmpty)
-                      const Text(
-                        'No reports yet.',
-                        style: TextStyle(color: Colors.grey),
+                      Text(
+                        AppText.get('no_reports'),
+                        style: const TextStyle(color: Colors.grey),
                       )
                     else
                       ...myReports.take(2).map((doc) {
@@ -1131,9 +1080,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 32),
 
-          const Text(
-            'Daily Eco-Insights',
-            style: TextStyle(
+          Text(
+            AppText.get('daily_insights'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -1175,7 +1124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Read More ->',
+                        AppText.get('read_more'),
                         style: TextStyle(
                           color: Colors.green.shade700,
                           fontSize: 12,
@@ -1199,16 +1148,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // ==============================================
   Widget _buildRewardsTab(int points, String level, Color levelColor) {
     int nextLevelPoints = 100;
-    String nextLevelName = 'Silver';
     if (points >= 1000) {
       nextLevelPoints = 1000;
-      nextLevelName = 'Max Level';
     } else if (points >= 500) {
       nextLevelPoints = 1000;
-      nextLevelName = 'Platinum';
     } else if (points >= 100) {
       nextLevelPoints = 500;
-      nextLevelName = 'Gold';
     }
 
     double progress = points >= 1000 ? 1.0 : (points / nextLevelPoints);
@@ -1218,9 +1163,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Rewards Journey',
-            style: TextStyle(
+          Text(
+            AppText.get('rewards_journey'),
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -1228,7 +1173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Earn points by reporting waste and unlock exclusive rewards!',
+            AppText.get('earn_points'),
             style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
           ),
           const SizedBox(height: 24),
@@ -1262,7 +1207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        'Current Level: $level',
+                        '${AppText.get('current_level')}: $level',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -1285,11 +1230,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8.0, left: 6.0),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, left: 6.0),
                       child: Text(
-                        'Points',
-                        style: TextStyle(
+                        AppText.get('points'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white70,
@@ -1302,13 +1247,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Progress to next level',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    Text(
+                      AppText.get('progress'),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                     Text(
                       points >= 1000
-                          ? 'Maxed Out!'
+                          ? AppText.get('maxed_out')
                           : '$points / $nextLevelPoints',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
@@ -1328,27 +1276,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     minHeight: 8,
                   ),
                 ),
-                if (points < 1000) ...[
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      'Only ${nextLevelPoints - points} points away from $nextLevelName!',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
           const SizedBox(height: 32),
 
-          const Text(
-            'Available Rewards',
-            style: TextStyle(
+          Text(
+            AppText.get('available_rewards'),
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -1358,7 +1293,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           _buildPremiumRewardCard(
             title: 'Platinum Reward',
-            points: '1000 Pts',
+            points: '1000 ${AppText.get('pts')}',
             subtitle: '50% OFF Dinner at Cinnamon Grand',
             icon: Icons.diamond,
             gradientColors: [
@@ -1369,7 +1304,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _buildPremiumRewardCard(
             title: 'Gold Reward',
-            points: '500 Pts',
+            points: '500 ${AppText.get('pts')}',
             subtitle: 'Priority Report Verification & VIP Status',
             icon: Icons.emoji_events,
             gradientColors: [Colors.amber.shade400, Colors.orange.shade800],
@@ -1377,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _buildPremiumRewardCard(
             title: 'Silver Reward',
-            points: '100 Pts',
+            points: '100 ${AppText.get('pts')}',
             subtitle: 'Free Premium Reusable Bag & 10% Eco-Shop Discount',
             icon: Icons.workspace_premium,
             gradientColors: [Colors.blueGrey.shade400, Colors.grey.shade800],
@@ -1484,13 +1419,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.lock_open, size: 12, color: Colors.green),
-                          SizedBox(width: 4),
+                          const Icon(
+                            Icons.lock_open,
+                            size: 12,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: 4),
                           Text(
-                            'UNLOCKED',
-                            style: TextStyle(
+                            AppText.get('unlocked'),
+                            style: const TextStyle(
                               color: Colors.green,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -1510,13 +1449,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.white30),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.lock, size: 12, color: Colors.white70),
-                          SizedBox(width: 4),
+                          const Icon(
+                            Icons.lock,
+                            size: 12,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 4),
                           Text(
-                            'LOCKED',
-                            style: TextStyle(
+                            AppText.get('locked'),
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -1535,12 +1478,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==============================================
-  // TAB 3: අලුත් PREMIUM LEADERBOARD TAB
+  // TAB 3: LEADERBOARD TAB
   // ==============================================
   Widget _buildLeaderboardTab(String currentUserId) {
     return Column(
       children: [
-        // 1. අලුත් ලස්සන Header එක
         Container(
           width: double.infinity,
           padding: const EdgeInsets.only(
@@ -1551,10 +1493,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFF0F3D1F),
-                Color(0xFF1DD15D),
-              ], // තද කොළේ ඉඳන් Neon කොළේට
+              colors: [Color(0xFF0F3D1F), Color(0xFF1DD15D)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1589,9 +1528,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                "Leaderboard",
-                style: TextStyle(
+              Text(
+                AppText.get('leaderboard'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -1600,7 +1539,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                "Top Eco-Warriors in the City",
+                AppText.get('top_warriors'),
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.9),
                   fontSize: 14,
@@ -1610,8 +1549,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
-        // 2. අලුත් Rank List එක
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -1650,27 +1587,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   String userName = userData['name'] ?? email.split('@')[0];
                   bool isCurrentUser = userDoc.id == currentUserId;
 
-                  // පාට තීරණය කරන කොටස
-                  Color rankColor;
-                  Color bgColor;
-                  if (index == 0) {
-                    rankColor = Colors.amber.shade600; // Gold
-                    bgColor = Colors.amber.shade50;
-                  } else if (index == 1) {
-                    rankColor = Colors.blueGrey.shade400; // Silver
-                    bgColor = Colors.blueGrey.shade50;
-                  } else if (index == 2) {
-                    rankColor = Colors.brown.shade500; // Bronze
-                    bgColor = Colors.brown.shade50;
-                  } else {
-                    rankColor = Colors.grey.shade500; // සාමාන්‍ය අයට
-                    bgColor = Colors.white;
-                  }
-
-                  // තමන්ගේ කාඩ් එක නම් පාට ලා කොළ වෙනවා
-                  if (isCurrentUser) {
-                    bgColor = Colors.green.shade50;
-                  }
+                  Color rankColor = index == 0
+                      ? Colors.amber.shade600
+                      : index == 1
+                      ? Colors.blueGrey.shade400
+                      : index == 2
+                      ? Colors.brown.shade500
+                      : Colors.grey.shade500;
+                  Color bgColor = isCurrentUser
+                      ? Colors.green.shade50
+                      : index == 0
+                      ? Colors.amber.shade50
+                      : index == 1
+                      ? Colors.blueGrey.shade50
+                      : index == 2
+                      ? Colors.brown.shade50
+                      : Colors.white;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -1678,7 +1610,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: bgColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        // තමන්ගේ එකට ලොකු කොළ පාට බෝඩර් එකක්, Top 3 අයට ඒ ඒ පාටින් බෝඩර් එකක් දෙනවා
                         color: isCurrentUser
                             ? Colors.green.shade400
                             : (index < 3
@@ -1719,7 +1650,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: index < 3
                                 ? rankColor
                                 : Colors.grey.shade200,
-                            // මුල් 3 දෙනාට තරුවක් දෙනවා, අනිත් අයට නමේ මුල් අකුර දෙනවා
                             child: index < 3
                                 ? const Icon(
                                     Icons.star,
@@ -1752,14 +1682,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          // Points පෙන්නන Badge එකත් ඒ අදාළ පාටින්ම පෙන්නනවා
                           color: index < 3
                               ? rankColor.withOpacity(0.2)
                               : Colors.green.shade100,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '$points Pts',
+                          '$points ${AppText.get('pts')}',
                           style: TextStyle(
                             color: index < 3
                                 ? rankColor.withOpacity(0.9)
@@ -1926,7 +1855,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1972,7 +1900,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildStatCard(
-                      "Points",
+                      AppText.get('points'),
                       points.toString(),
                       Icons.stars_rounded,
                       Colors.amber,
@@ -1992,16 +1920,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 32),
-
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    "Account Settings",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    AppText.get('account_settings'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -2027,9 +1956,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.blue,
                           ),
                         ),
-                        title: const Text(
-                          "My Area",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Text(
+                          AppText.get('my_area'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           _userArea,
@@ -2062,9 +1991,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.orange,
                           ),
                         ),
-                        title: const Text(
-                          "Report History",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Text(
+                          AppText.get('report_history'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         trailing: const Icon(
                           Icons.arrow_forward_ios,
@@ -2090,9 +2019,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.purple,
                           ),
                         ),
-                        title: const Text(
-                          "Help & Support",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        title: Text(
+                          AppText.get('help_support'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         trailing: const Icon(
                           Icons.arrow_forward_ios,
@@ -2101,7 +2030,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Help & Support coming soon!'),
+                            content: Text('Coming soon!'),
                             backgroundColor: Colors.purple,
                           ),
                         ),
@@ -2120,9 +2049,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: const Icon(Icons.logout, color: Colors.red),
                         ),
-                        title: const Text(
-                          "Logout",
-                          style: TextStyle(
+                        title: Text(
+                          AppText.get('logout'),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
                           ),
@@ -2187,29 +2116,34 @@ class _HomeScreenState extends State<HomeScreen> {
             String level = userData['level'] ?? 'Bronze';
             Color levelColor = _getLevelColor(level);
 
-            var myReports = reportsSnapshot.data!.docs.where((doc) {
-              var data = doc.data() as Map<String, dynamic>;
-              return data['userId'] == currentUser?.uid;
-            }).toList();
-
-            var unreadNotifications = myReports.where((doc) {
-              var data = doc.data() as Map<String, dynamic>;
-              return data['status'] == 'Assigned' &&
-                  data['isRewardClaimed'] != true;
-            }).toList();
+            var myReports = reportsSnapshot.data!.docs
+                .where(
+                  (doc) =>
+                      (doc.data() as Map<String, dynamic>)['userId'] ==
+                      currentUser?.uid,
+                )
+                .toList();
+            var unreadNotifications = myReports
+                .where(
+                  (doc) =>
+                      (doc.data() as Map<String, dynamic>)['status'] ==
+                          'Assigned' &&
+                      (doc.data() as Map<String, dynamic>)['isRewardClaimed'] !=
+                          true,
+                )
+                .toList();
 
             return Scaffold(
               backgroundColor: Colors.grey.shade50,
-
               appBar:
                   (_currentIndex == 0 ||
                       _currentIndex == 2 ||
                       _currentIndex == 3)
                   ? null
                   : AppBar(
-                      title: const Text(
-                        'Smart Waste',
-                        style: TextStyle(
+                      title: Text(
+                        AppText.get('app_name'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -2218,7 +2152,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundColor: Colors.green,
                       elevation: 0,
                     ),
-
               body: SafeArea(
                 child: _currentIndex == 0
                     ? _buildHomeTab(
@@ -2236,7 +2169,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? _buildLeaderboardTab(currentUser?.uid ?? '')
                     : _buildProfileTab(userData, myReports.length, levelColor),
               ),
-
               floatingActionButtonLocation:
                   FloatingActionButtonLocation.centerDocked,
               floatingActionButton: Container(
@@ -2269,7 +2201,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
               bottomNavigationBar: BottomAppBar(
                 shape: const CircularNotchedRectangle(),
                 notchMargin: 8.0,
@@ -2293,7 +2224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   : Colors.grey,
                             ),
                             Text(
-                              'Home',
+                              AppText.get('home'),
                               style: TextStyle(
                                 color: _currentIndex == 0
                                     ? Colors.green
@@ -2320,7 +2251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   : Colors.grey,
                             ),
                             Text(
-                              'Rewards',
+                              AppText.get('rewards'),
                               style: TextStyle(
                                 color: _currentIndex == 1
                                     ? Colors.green
@@ -2348,7 +2279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   : Colors.grey,
                             ),
                             Text(
-                              'Top 50',
+                              AppText.get('leaderboard'),
                               style: TextStyle(
                                 color: _currentIndex == 2
                                     ? Colors.green
@@ -2375,7 +2306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   : Colors.grey,
                             ),
                             Text(
-                              'Profile',
+                              AppText.get('profile'),
                               style: TextStyle(
                                 color: _currentIndex == 3
                                     ? Colors.green
