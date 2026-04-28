@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart'; // Clipboard එකට Copy කරන්න මේක ඕනේ
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'login_screen.dart';
 
@@ -907,9 +907,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
   // TAB 2: Live Map
-  // ==========================================
+
   Widget _buildLiveMapTab() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('reports').snapshots(),
@@ -1036,9 +1035,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
   // TAB 3: TEAMS TAB
-  // ==========================================
+
   Widget _buildTeamsTab() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -1368,9 +1366,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
-  // TAB 4: අලුත් PREMIUM SETTINGS TAB
-  // ==========================================
+  // TAB 4: New PREMIUM SETTINGS TAB
+
   Widget _buildSettingsTab() {
     return Column(
       children: [
@@ -1537,7 +1534,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   color: Colors.white,
                   child: Column(
                     children: [
-                      // 1. Export CSV Button (දැන් වැඩ කරනවා!)
+                      // 1. Export CSV Button
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
@@ -1557,7 +1554,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         trailing: const Icon(Icons.copy, color: Colors.grey),
                         onTap: () async {
                           try {
-                            // Database එකෙන් Data ගන්නවා
+                            // Take Data From Database
                             var snapshot = await FirebaseFirestore.instance
                                 .collection('reports')
                                 .get();
@@ -1568,7 +1565,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               csvData +=
                                   "${doc.id},${data['title']},${data['location']},${data['status']},${data['userEmail']}\n";
                             }
-                            // ඒ ටික Clipboard එකට Copy කරනවා
+
                             await Clipboard.setData(
                               ClipboardData(text: csvData),
                             );
@@ -1607,7 +1604,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                       const Divider(height: 1, indent: 60, endIndent: 20),
 
-                      // 2. Clear Old Data Button (දැන් වැඩ කරනවා!)
+                      // 2. Clear Old Data Button
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
@@ -1648,9 +1645,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     backgroundColor: Colors.red,
                                   ),
                                   onPressed: () async {
-                                    Navigator.pop(context); // Dialog එක වහනවා
+                                    Navigator.pop(context); // Dialog closed
                                     try {
-                                      // Status එක Assigned හෝ Rejected ඒවා විතරක් මකනවා
+                                      // Status  Assigned or reject ones are deleted
                                       var snapshot = await FirebaseFirestore
                                           .instance
                                           .collection('reports')
@@ -1749,7 +1746,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // ප්‍රධාන Build Function එක
+  // Main Build Function with Bottom Navigation
   // ==========================================
   @override
   Widget build(BuildContext context) {
