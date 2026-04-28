@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // අලුතින් දැම්මා (Database එකෙන් Role එක ගන්න)
+import 'package:cloud_firestore/cloud_firestore.dart'; // Newly added (get the role from the database)
+
 import 'home_screen.dart';
 import 'admin_dashboard.dart';
 import 'register_screen.dart';
@@ -38,8 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
             .doc(userCredential.user!.uid)
             .get();
 
-        String userRole = 'user'; // Default විදිහට user කියලා ගන්නවා
-
+        String userRole = 'user'; // Assumes user by default
         if (userDoc.exists && userDoc.data() != null) {
           var userData = userDoc.data() as Map<String, dynamic>;
           userRole =
