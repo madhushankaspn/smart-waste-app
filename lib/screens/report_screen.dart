@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:geolocator/geolocator.dart'; // අලුතින් දැම්මා
-import 'package:geocoding/geocoding.dart'; // අලුතින් දැම්මා
+import 'package:geolocator/geolocator.dart'; 
+import 'package:geocoding/geocoding.dart'; 
 import 'map_picker_screen.dart';
 
 class ReportScreen extends StatefulWidget {
