@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_screen.dart'; // අලුතින් දැම්මා (Login එකට යන්න ඕන නිසා)
+import 'login_screen.dart'; // Newly added (because I need to go to Login)
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isConfirmObscure = true;
 
   Future<void> _register() async {
-    // Passwords දෙක සමානද කියලා බලනවා
+    // Check if the two passwords are the same
     if (_passwordController.text.trim() !=
         _confirmPasswordController.text.trim()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             password: _passwordController.text.trim(),
           );
 
-      // 2. Database එකේ User ගේ Profile එක මුලින්ම හදනවා (0 Points එක්ක)
+      // 2. The user's profile is first created in the database (with 0 Points)
       if (userCredential.user != null) {
         await FirebaseFirestore.instance
             .collection('users')
@@ -56,12 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'level': 'Bronze',
             });
 
-        // 3. අලුත් වෙනස: හැදුණු ගමන් ඉබේම Login වෙන එකෙන් Sign Out කරනවා
+        // 3. New change: Automatically logging in and out as soon as it is created
         await FirebaseAuth.instance.signOut();
       }
 
       if (mounted) {
-        // 4. "Success" මැසේජ් එක පෙන්වලා ආපහු Login Screen එකට යවනවා
+        // 4. Displays the "Success" message and returns to the Login Screen.
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registration Successful! Please log in.'),
@@ -107,13 +108,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        height: double.infinity, // මුළු තිරයම Cover වෙන්න
+        height: double.infinity, // Cover the entire screen
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color(0xFFE8F5E9),
               Color(0xFFC8E6C9),
-            ], // ලා කොළ පාට Gradient එක
+            ], // Light green gradient
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -128,7 +129,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // අර පරණ ඔරිජිනල් Logo එක (සුදු කොටුව ඇතුලේ)
                   Container(
                     width: 90,
                     height: 90,
@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // සුදු පාට Registration Card එක
+                  // White Registration Card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -315,7 +315,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Login Link එක (කලින් ගිණුමක් තියෙනවා නම්)
+                  // Login Link (if you already have an account)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -325,7 +325,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          // ආපහු Login Screen එකට යනවා
+                          // Goes back to the Login Screen
+
                           Navigator.pop(context);
                         },
                         child: const Text(
