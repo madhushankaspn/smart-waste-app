@@ -14,9 +14,9 @@ class AppText {
       'points': 'Points',
       'pts': 'PTS',
       'next_milestone': 'NEXT MILESTONE',
-      'target': 'Target: Cinnamon Grand Dinner',
+      'target': 'Target: silver level',
       'next_collection': 'Next Garbage Collection',
-      'tomorrow': 'Tomorrow, 08:00 AM',
+      'tomorrow': 'Tomorrow, 07:00 AM',
       'plastic_paper': 'Plastic & Paper',
       'featured_reward': 'FEATURED REWARD',
       'redeem_now': 'Redeem Now',
@@ -58,7 +58,7 @@ class AppText {
       'next_milestone': 'මීළඟ ඉලක්කය',
       'target': 'ඉලක්කය: Silver Level',
       'next_collection': 'මීළඟ කසළ එකතු කිරීම',
-      'tomorrow': 'හෙට, උදේ 08:00',
+      'tomorrow': 'හෙට, උදේ 07:00',
       'plastic_paper': 'ප්ලාස්ටික් සහ කඩදාසි',
       'featured_reward': 'විශේෂ තෑගි',
       'redeem_now': 'දැන්ම ලබාගන්න',
@@ -87,7 +87,7 @@ class AppText {
     },
   };
 
-  // වචනය අරගන්න Function එක
+  // the function of get word
   static String get(String key) {
     return _texts[lang]?[key] ?? key;
   }
