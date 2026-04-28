@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_screen.dart'; // අලුතින් දැම්මා (Login එකට යන්න ඕන නිසා)
+import 'login_screen.dart'; // Newly added (because I need to go to Login)
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isConfirmObscure = true;
 
   Future<void> _register() async {
-    // Passwords දෙක සමානද කියලා බලනවා
+    // Check if the two passwords are the same
     if (_passwordController.text.trim() !=
         _confirmPasswordController.text.trim()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             password: _passwordController.text.trim(),
           );
 
-      // 2. Database එකේ User ගේ Profile එක මුලින්ම හදනවා (0 Points එක්ක)
+      // 2. The user's profile is first created in the database (with 0 Points)
       if (userCredential.user != null) {
         await FirebaseFirestore.instance
             .collection('users')
@@ -56,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'level': 'Bronze',
             });
 
-        // 3. අලුත් වෙනස: හැදුණු ගමන් ඉබේම Login වෙන එකෙන් Sign Out කරනවා
+        // 3. New change: Automatically logging in and out as soon as it is created
         await FirebaseAuth.instance.signOut();
       }
 
