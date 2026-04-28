@@ -44,10 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
           var userData = userDoc.data() as Map<String, dynamic>;
           userRole =
               userData['role'] ??
-              'user'; // Database එකේ 'role' එකක් තියෙනවද බලනවා
+              'user'; // Checks if there is a 'role' in the database
         }
 
-        // 3. Role එක 'admin' නම් Admin Dashboard එකට, නැත්නම් Home Screen එකට යවනවා!
+        // 3. If the role is 'admin', it will be sent to the Admin Dashboard, or the Home Screen!
         if (mounted) {
           if (userRole == 'admin') {
             Navigator.pushReplacement(
@@ -106,15 +106,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // අලුත් කරපු ඔරිජිනල් Logo එක
                   Container(
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        25,
-                      ), // රවුම් කොන් සහිත කොටුව
+                      borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black12,
@@ -125,9 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: const Icon(
                       Icons
-                          .delete_sweep_rounded, // පරණ Splash Screen එකේ තිබ්බ Icon එකමයි
+                          .delete_sweep_rounded, // The icon is the same as the old splash screen
                       size: 60,
-                      color: Color(0xFF1DD15D), // Neon Green පාට
+                      color: Color(0xFF1DD15D), // Neon Green color
                     ),
                   ),
                   const SizedBox(height: 24),
