@@ -28,7 +28,7 @@ class ReportHistoryScreen extends StatelessWidget {
       body: currentUser == null
           ? const Center(child: Text("User not logged in"))
           : StreamBuilder<QuerySnapshot>(
-              // යූසර්ගේ ID එකට අදාළ Reports විතරක් ගන්නවා
+              // Only get records related to the user's ID
               stream: FirebaseFirestore.instance
                   .collection('reports')
                   .where('userId', isEqualTo: currentUser.uid)
@@ -62,7 +62,7 @@ class ReportHistoryScreen extends StatelessWidget {
                   );
                 }
 
-                // අලුත්ම ඒවා උඩින් පේන්න Sort කරනවා
+                // Sorting with the newest ones at the top
                 var reports = snapshot.data!.docs.toList();
                 reports.sort((a, b) {
                   Timestamp? tA =
