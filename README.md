@@ -36,11 +36,11 @@ This project was successfully designed, developed, and tested collaboratively by
 
 | Name | Student ID | GitHub Profile | Contribution & Role |
 | :--- | :--- | :--- | :--- |
-| **Supun Madhusanka** 👑 | [ID එක] | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
-| **Himaya Perera** | [ID එක] | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
-| **Hiruni Nimanthika** | [ID එක] | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
-| **Imasha Sachinthani** | [ID එක] | [@username](https://github.com/imasha-sachinthani) | System Testing & QA |
-| **Savindi De Silva** | [ID එක] | [@username](https://github.com/savee_de_silva) | Documentation & Presentation |
+| **Supun Madhusanka** 👑 | 34223 | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
+| **Himaya Perera** | 34244 | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
+| **Hiruni Nimanthika** | 34209 | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
+| **Imasha Sachinthani** | 34249 | [@username](https://github.com/imasha-sachinthani) | System Testing & QA |
+| **Savindi De Silva** | 34243 | [@username](https://github.com/savee_de_silva) | Documentation & Presentation |
 
 > **Note:** Every member contributed to the project repository through collaborative Git version control.
 
