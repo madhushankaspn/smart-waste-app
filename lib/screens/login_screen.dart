@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message ?? 'Login failed. Please try again.'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color.fromARGB(255, 246, 65, 52),
           ),
         );
       }
@@ -243,7 +243,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                77,
+                                184,
+                                80,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

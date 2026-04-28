@@ -58,7 +58,7 @@ class AppText {
       'next_milestone': 'මීළඟ ඉලක්කය',
       'target': 'ඉලක්කය: Silver Level',
       'next_collection': 'මීළඟ කසළ එකතු කිරීම',
-      'tomorrow': 'හෙට, උදේ 08:00',
+      'tomorrow': 'හෙට, උදේ 07:00',
       'plastic_paper': 'ප්ලාස්ටික් සහ කඩදාසි',
       'featured_reward': 'විශේෂ තෑගි',
       'redeem_now': 'දැන්ම ලබාගන්න',
