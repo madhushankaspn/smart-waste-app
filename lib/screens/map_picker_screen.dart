@@ -26,7 +26,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     _getCurrentLocation();
   }
 
-  // දැනට ඉන්න තැන ගන්න Function එක (කලින් එකමයි)
+  //get current location
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
     try {
