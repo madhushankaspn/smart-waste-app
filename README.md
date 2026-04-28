@@ -36,11 +36,11 @@ This project was successfully designed, developed, and tested collaboratively by
 
 | Name | Student ID | GitHub Profile | Contribution & Role |
 | :--- | :--- | :--- | :--- |
-| **[ඔයාගේ නම]** 👑 | [ID එක] | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
+| **Supun Madhusanka** 👑 | [ID එක] | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
 | **Himaya Perera** | [ID එක] | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
-| **Hiruni [වාසගම]** | [ID එක] | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
-| **[යාලුවා 4]** | [ID එක] | [@username](https://github.com/username) | System Testing & QA |
-| **[යාලුවා 5]** | [ID එක] | [@username](https://github.com/username) | Documentation & Presentation |
+| **Hiruni Nimanthika** | [ID එක] | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
+| **Imasha Sachinthani** | [ID එක] | [@username](https://github.com/imasha-sachinthani) | System Testing & QA |
+| **Savindi De Silva** | [ID එක] | [@username](https://github.com/savee_de_silva) | Documentation & Presentation |
 
 > **Note:** Every member contributed to the project repository through collaborative Git version control.
 
