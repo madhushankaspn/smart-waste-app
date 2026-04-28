@@ -61,7 +61,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       if (mounted) {
-        // 4. "Success" මැසේජ් එක පෙන්වලා ආපහු Login Screen එකට යවනවා
+        // 4. Displays the "Success" message and returns to the Login Screen.
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registration Successful! Please log in.'),
@@ -107,13 +108,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        height: double.infinity, // මුළු තිරයම Cover වෙන්න
+        height: double.infinity, // Cover the entire screen
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color(0xFFE8F5E9),
               Color(0xFFC8E6C9),
-            ], // ලා කොළ පාට Gradient එක
+            ], // Light green gradient
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -128,7 +129,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // අර පරණ ඔරිජිනල් Logo එක (සුදු කොටුව ඇතුලේ)
                   Container(
                     width: 90,
                     height: 90,
@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // සුදු පාට Registration Card එක
+                  // White Registration Card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
