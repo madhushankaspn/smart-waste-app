@@ -28,17 +28,7 @@
 
 ---
 
-## 📱 App Screenshots
-<p align="center">
-  <img src="<img width="621" height="881" alt="image" src="https://github.com/user-attachments/assets/7c8aa2d1-c30b-49ba-abea-0e0f7a7c44cd" />
-" width="200" alt="Start Screen">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://via.placeholder.com/200x400.png?text=Home+Screen" width="200" alt="Home">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="https://via.placeholder.com/200x400.png?text=Admin+Dashboard" width="200" alt="Admin">
-</p>
 
----
 
 ## 👥 Meet The Team
 
