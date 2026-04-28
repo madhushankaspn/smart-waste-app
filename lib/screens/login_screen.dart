@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // 1. Firebase Auth හරහා ඊමේල්, පාස්වර්ඩ් දීලා ලොග් වෙනවා
+      // 1. Log in with email and password via Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
             email: _emailController.text.trim(),
@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
       if (mounted && userCredential.user != null) {
-        // 2. Database එකෙන් මේ User ගේ විස්තර (Document එක) ගන්නවා
+        // 2. Retrieve this user's details (document) from the database.
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
