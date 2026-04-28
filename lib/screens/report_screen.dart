@@ -169,9 +169,10 @@ class _ReportScreenState extends State<ReportScreen> {
             Placemark place = placemarks[0];
             // උදා: "Galle Road, Colombo, Sri Lanka"
             address =
-                "${place.street != null && place.street!.isNotEmpty ? place.street! + ', ' : ''}${place.locality ?? ''}";
-            if (address.trim() == ',')
+                "${place.street != null && place.street!.isNotEmpty ? '${place.street!}, ' : ''}${place.locality ?? ''}";
+            if (address.trim() == ',') {
               address = "${position.latitude}, ${position.longitude}";
+            }
           }
         } catch (e) {
           print("Geocoding failed: $e");

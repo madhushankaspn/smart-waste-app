@@ -11,7 +11,7 @@ import 'login_screen.dart';
 import 'report_screen.dart';
 import 'report_history_screen.dart'; // අලුතින් දැම්මා
 import 'waste_guide_screen.dart'; // අලුතින් දැම්මා
-import 'eco_shorts_screen.dart'; // අලුතින් දැම්මා
+import 'eco_shorts_screen.dart'; // himaya
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _lastSavedPoints = prefs.getInt('last_points') ?? 0;
-      _userArea = prefs.getString('user_area') ?? "Maharagama Zone";
+      _userArea = prefs.getString('user_area') ?? "Anuradhapura Zone";
     });
   }
 
@@ -63,13 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('users')
           .doc(currentUser?.uid)
           .update({'profilePhoto': base64Image});
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile picture updated!'),
             backgroundColor: Colors.green,
           ),
         );
+      }
     }
   }
 
@@ -139,6 +140,10 @@ class _HomeScreenState extends State<HomeScreen> {
       'Homagama Zone',
       'Kaduwela Zone',
       'Dehiwala Zone',
+      'AnuradhapuraZone',
+      'Nittabuwa Zone',
+      'Gampaha Zone',
+      'kadawatha Zone',
     ];
     showDialog(
       context: context,
@@ -298,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        if (unreadNotifications.isEmpty)
+        if (unreadNotifications.isEmpty) {
           return const SizedBox(
             height: 200,
             child: Center(
@@ -308,6 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
+        }
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -926,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '${(myReports.length * 2.5).toStringAsFixed(1)}',
+                            (myReports.length * 2.5).toStringAsFixed(1),
                             style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -1075,7 +1081,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                   ],
                 ),
               ),
@@ -1666,17 +1672,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 .limit(50)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(color: Colors.green),
                 );
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return const Center(
                   child: Text(
                     "No users found.",
                     style: TextStyle(color: Colors.grey),
                   ),
                 );
+              }
 
               var users = snapshot.data!.docs;
 
@@ -2174,13 +2182,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         onTap: () async {
                           await FirebaseAuth.instance.signOut();
-                          if (mounted)
+                          if (mounted) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const LoginScreen(),
                               ),
                             );
+                          }
                         },
                       ),
                     ],
