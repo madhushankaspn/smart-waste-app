@@ -40,7 +40,7 @@ This project was successfully designed, developed, and tested collaboratively by
 | **Himaya Perera** | 34244 | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
 | **Hiruni Nimanthika** | 34209 | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
 | **Imasha Sachinthani** | 34249 | [@username](https://github.com/imasha-sachinthani) | System Testing & QA |
-| **Savindi De Silva** | 34243 | [@username](https://github.com/savee_de_silva) | Documentation & Presentation |
+| **Savindi De Silva** | 34243 | [@username](https://github.com/SaveeDeSilva) | Documentation & Presentation |
 
 > **Note:** Every member contributed to the project repository through collaborative Git version control.
 
