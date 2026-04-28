@@ -38,7 +38,7 @@ This project was successfully designed, developed, and tested collaboratively by
 | :--- | :--- | :--- | :--- |
 | **Supun Madhusanka** 👑 | 34223 | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
 | **Himaya Perera** | 34244 | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
-| **Hiruni Nimanthika** | 34209 | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
+| **Hiruni Nimanthika** | 34209 | [@hiruni](https://github.com/HIRUKODIKARA) | UI Fixes & Code Standardization |
 | **Imasha Sachinthani** | 34249 | [@username](https://github.com/imasha-sachinthani) | System Testing & QA |
 | **Savindi De Silva** | 34243 | [@username](https://github.com/SaveeDeSilva) | Documentation & Presentation |
 
