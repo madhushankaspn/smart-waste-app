@@ -87,7 +87,7 @@ class AppText {
     },
   };
 
-  // වචනය අරගන්න Function එක
+  // the function of get word
   static String get(String key) {
     return _texts[lang]?[key] ?? key;
   }
