@@ -1,46 +1,72 @@
+<div align="center">
+
 # ♻️ Smart Waste Management App
 
-A modern, modern mobile application built with Flutter to streamline waste management and keep our environment clean. This app empowers citizens to report uncollected waste and helps local authorities manage, track, and resolve waste collection efficiently.
+*A modern, gamified mobile application built to streamline waste management, empower citizens, and keep our environment clean.*
 
-## ✨ Key Features
-* **User & Admin Roles:** Separate dashboards for regular users and administrators.
-* **Waste Reporting:** Users can take real-time photos and report garbage dumps instantly.
-* **Location Tracking:** Integrated with Google Maps and Geolocator to pinpoint the exact location of the waste.
-* **Admin Dashboard:** Admins can view all reports, verify them, and update their status (e.g., Pending, Collected).
-* **Rewards System:** Gamified experience where users earn points for making valid reports.
+<br>
 
-## 🛠️ Tech Stack
-* **Frontend:** Flutter & Dart
-* **Backend:** Firebase (Cloud Firestore & Authentication)
-* **Integrations:** Google Maps Flutter, Image Picker, SharedPreferences
+**Built With**
+
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
+![Firebase](https://img.shields.io/badge/firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Google Maps](https://img.shields.io/badge/Google%20Maps-4285F4?style=for-the-badge&logo=googlemaps&logoColor=white)
+
+</div>
 
 ---
 
-## 👥 Group Members
-This project was successfully designed, developed, and tested collaboratively by the following team members:
+## ✨ Key Features
 
-| Name | Student ID | GitHub Username | Role & Contribution |
+* 👤 **User & Admin Roles:** Separate, secure dashboards for regular users and administrators.
+* 📸 **Real-Time Reporting:** Users can take live photos and report garbage dumps instantly.
+* 📍 **Location Tracking:** Integrated with Google Maps & Geolocator to pinpoint exact waste coordinates.
+* 📊 **Admin Dashboard:** Admins can view all reports, verify authenticity, and update statuses (e.g., Pending, Collected).
+* 🏆 **Rewards System:** A gamified experience where users earn points for keeping the community clean.
+
+---
+
+## 📱 App Screenshots
+<p align="center">
+  <img src="https://via.placeholder.com/200x400.png?text=Login+Screen" width="200" alt="Login">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/200x400.png?text=Home+Screen" width="200" alt="Home">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://via.placeholder.com/200x400.png?text=Admin+Dashboard" width="200" alt="Admin">
+</p>
+
+---
+
+## 👥 Meet The Team
+
+This project was successfully designed, developed, and tested collaboratively by:
+
+| Name | Student ID | GitHub Profile | Contribution & Role |
 | :--- | :--- | :--- | :--- |
-| **[ඔයාගේ නම මෙතනට]** | [ID එක] | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer / UI Design & Backend Integration |
+| **[ඔයාගේ නම]** 👑 | [ID එක] | [@madhushankaspn](https://github.com/madhushankaspn) | Lead Developer, UI Design & Backend Integration |
 | **Himaya Perera** | [ID එක] | [@himaperera](https://github.com/himaperera) | Code Refactoring & Feature Updates |
-| **Hiruni [වාසගම]** | [ID එක] | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Documentation |
-| **[යාලුවා 4 ගේ නම]** | [ID එක] | [@username] | Testing & QA |
-| **[යාලුවා 5 ගේ නම]** | [ID එක] | [@username] | UI/UX Research & Presentation |
+| **Hiruni [වාසගම]** | [ID එක] | [@hiruni](https://github.com/hiruni) | UI Fixes & Code Standardization |
+| **[යාලුවා 4]** | [ID එක] | [@username](https://github.com/username) | System Testing & QA |
+| **[යාලුවා 5]** | [ID එක] | [@username](https://github.com/username) | Documentation & Presentation |
 
-*(Note: Every member contributed to the project repository through collaborative Git version control.)*
+> **Note:** Every member contributed to the project repository through collaborative Git version control.
 
 ---
 
 ## 🚀 Getting Started
 
-If you want to run this project locally, follow these steps:
+To run this project locally on your machine, follow these simple steps:
 
-### Prerequisites
-* Flutter SDK (Version 3.22.0 or higher)
+### 1️⃣ Prerequisites
+* [Flutter SDK](https://docs.flutter.dev/get-started/install) (Version 3.22.0 or higher)
 * Android Studio / VS Code
 * An active Firebase Project
 
-### Installation Steps
-1. **Clone the repository**
-   ```bash
-   git clone [https://github.com/madhushankaspn/smart-waste-app.git](https://github.com/madhushankaspn/smart-waste-app.git)a3wwe
+### 2️⃣ Installation
+
+Clone the repository:
+```bash
+git clone [https://github.com/madhushankaspn/smart-waste-app.git](https://github.com/madhushankaspn/smart-waste-app.git)
+cd smart-waste-app
