@@ -85,10 +85,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
       final response = await http.get(
         url,
-        headers: {
-          'User-Agent':
-              'SmartWasteApp/1.0', // API එක බ්ලොක් නොවෙන්න මේක යවන්න ඕනේ
-        },
+        headers: {'User-Agent': 'SmartWasteApp/1.0'},
       );
 
       if (response.statusCode == 200) {
