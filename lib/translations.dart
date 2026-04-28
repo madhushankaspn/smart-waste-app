@@ -16,7 +16,7 @@ class AppText {
       'next_milestone': 'NEXT MILESTONE',
       'target': 'Target: Cinnamon Grand Dinner',
       'next_collection': 'Next Garbage Collection',
-      'tomorrow': 'Tomorrow, 08:00 AM',
+      'tomorrow': 'Tomorrow, 07:00 AM',
       'plastic_paper': 'Plastic & Paper',
       'featured_reward': 'FEATURED REWARD',
       'redeem_now': 'Redeem Now',
