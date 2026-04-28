@@ -315,7 +315,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Login Link එක (කලින් ගිණුමක් තියෙනවා නම්)
+                  // Login Link (if you already have an account)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -325,7 +325,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          // ආපහු Login Screen එකට යනවා
+                          // Goes back to the Login Screen
+
                           Navigator.pop(context);
                         },
                         child: const Text(
