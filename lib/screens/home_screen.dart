@@ -61,7 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final currentUser = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser?.uid)
+          .doc(
+            currentUser?.uid,
+          ) // Added UI documentation and improved code readability
           .update({'profilePhoto': base64Image});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
