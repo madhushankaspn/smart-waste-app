@@ -78,7 +78,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     FocusScope.of(context).unfocus();
 
     try {
-      // OpenStreetMap API එකට රික්වෙස්ට් එක යවනවා (ලංකාව ඇතුලෙ තැන් වලට ප්‍රමුඛතාවය දෙනවා)
+      // Sending the request to the OpenStreetMap API (prioritizing locations within Sri Lanka)
       final url = Uri.parse(
         'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=1&countrycodes=LK',
       );
@@ -92,14 +92,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         final List data = json.decode(response.body);
 
         if (data.isNotEmpty) {
-          // ලොකේෂන් එක හොයාගත්තා නම් ඒක ගන්නවා
+          // If you find the location, you'll take it.
           final lat = double.parse(data[0]['lat']);
           final lon = double.parse(data[0]['lon']);
           final newLocation = LatLng(lat, lon);
 
           setState(() {
             _currentPosition = newLocation;
-            _pickedLocation = newLocation; // පින් එකත් එතනටම දානවා
+            _pickedLocation = newLocation; // put the pin right there.
           });
 
           // මැප් එක ඒ තැනට අරන් යනවා
