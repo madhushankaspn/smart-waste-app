@@ -140,6 +140,10 @@ class _HomeScreenState extends State<HomeScreen> {
       'Homagama Zone',
       'Kaduwela Zone',
       'Dehiwala Zone',
+      'AnuradhapuraZone',
+      'Nittabuwa Zone',
+      'Gampaha Zone',
+      'kadawatha Zone',
     ];
     showDialog(
       context: context,
