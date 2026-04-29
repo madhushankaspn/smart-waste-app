@@ -102,10 +102,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             _pickedLocation = newLocation; // put the pin right there.
           });
 
-          // මැප් එක ඒ තැනට අරන් යනවා
+          // The map takes you there.
           _mapController.move(newLocation, 15.0);
         } else {
-          // තැන හොයාගන්න බැරි වුණොත්
+          // If you can't find the place
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -154,7 +154,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. මැප් එක
+          // 1. The map
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -166,7 +166,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 });
                 FocusScope.of(
                   context,
-                ).unfocus(); // මැප් එක එබුවම කීබෝඩ් එක අයින් වෙනවා
+                ).unfocus(); // The keyboard disappears when you press the map.
               },
             ),
             children: [
