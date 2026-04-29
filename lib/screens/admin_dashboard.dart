@@ -1565,7 +1565,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               csvData +=
                                   "${doc.id},${data['title']},${data['location']},${data['status']},${data['userEmail']}\n";
                             }
-                            // ඒ ටික Clipboard එකට Copy කරනවා
+
                             await Clipboard.setData(
                               ClipboardData(text: csvData),
                             );
