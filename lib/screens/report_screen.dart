@@ -250,7 +250,7 @@ class _ReportScreenState extends State<ReportScreen> {
         'location': _locationController.text.trim(),
         'imageBase64': base64Image,
         'status': 'Pending',
-        // මෙතන අර random ලොකේෂන් එක වෙනුවට 0,0 දානවා දැනට (Map Picker එක හරියට හැදුවම මෙතනට ඇත්ත Lat/Lng දෙන්න පුළුවන්)
+        // For now, we'll replace that random location with 0,0 (once the Map Picker is properly configured, we can give the actual Lat/Lng here)
         'latitude': 6.9271,
         'longitude': 79.8612,
         'timestamp': FieldValue.serverTimestamp(),
