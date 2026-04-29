@@ -122,7 +122,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ----------------------------------------------------------------------
-  // අලුත් Function එක: ඇත්තම GPS Location එක ගැනීම
+  // New function: Get real GPS location
   // ----------------------------------------------------------------------
   Future<void> _getCurrentLocation() async {
     setState(() {
