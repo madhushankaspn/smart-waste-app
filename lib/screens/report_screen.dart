@@ -23,7 +23,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _isLoading = false;
   bool _isFetchingLocation = false;
 
-  // ෆොටෝ ගන්න කොටස
+  // Photo section
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
