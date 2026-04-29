@@ -1035,9 +1035,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
   // TAB 3: TEAMS TAB
-  // ==========================================
+
   Widget _buildTeamsTab() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
