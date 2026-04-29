@@ -130,7 +130,7 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      // 1. Location Service On කරලද බලනවා
+      // 1. Check if Location Service is turned on.
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw Exception('Location services are disabled. Please turn on GPS.');
