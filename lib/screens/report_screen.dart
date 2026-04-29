@@ -159,7 +159,7 @@ class _ReportScreenState extends State<ReportScreen> {
           "${position.latitude}, ${position.longitude}"; // Default එක
 
       if (!kIsWeb) {
-        // Web එකේදි සමහර වෙලාවට Geocoding වැඩ කරන්නේ නැති නිසා මේක Mobile වලට විතරක් සීමා කරනවා
+        // Geocoding sometimes doesn't work on the web, so this is limited to mobile only.
         try {
           List<Placemark> placemarks = await placemarkFromCoordinates(
             position.latitude,
