@@ -13,11 +13,11 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  LatLng _currentPosition = const LatLng(6.9271, 79.8612); // කොළඹ
+  LatLng _currentPosition = const LatLng(6.9271, 79.8612);
   LatLng? _pickedLocation;
   final MapController _mapController = MapController();
   final TextEditingController _searchController =
-      TextEditingController(); // Search Box එකේ Controller එක
+      TextEditingController(); // The controller in the search box
   bool _isLoadingLocation = false;
 
   @override
