@@ -85,7 +85,7 @@ class ReportHistoryScreen extends StatelessWidget {
                     String title = report['title'] ?? 'Unknown Waste';
                     String location = report['location'] ?? 'Unknown Location';
 
-                    // Status එක අනුව පාට වෙනස් කරනවා
+                   // Change color according to status
                     Color statusColor = status == 'Pending'
                         ? Colors.orange.shade800
                         : status == 'Rejected'
@@ -120,7 +120,7 @@ class ReportHistoryScreen extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ෆොටෝ එක
+                            // A image
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
@@ -141,7 +141,7 @@ class ReportHistoryScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            // විස්තර ටික
+                            // all details
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +178,7 @@ class ReportHistoryScreen extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  // Status Badge එක
+                                  // A status badge
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,

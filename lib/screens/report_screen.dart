@@ -23,7 +23,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _isLoading = false;
   bool _isFetchingLocation = false;
 
-  // ෆොටෝ ගන්න කොටස
+  // Photo section
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
@@ -122,7 +122,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   // ----------------------------------------------------------------------
-  // අලුත් Function එක: ඇත්තම GPS Location එක ගැනීම
+  // New function: Get real GPS location
   // ----------------------------------------------------------------------
   Future<void> _getCurrentLocation() async {
     setState(() {
@@ -130,13 +130,13 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      // 1. Location Service On කරලද බලනවා
+      // 1. Check if Location Service is turned on.
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw Exception('Location services are disabled. Please turn on GPS.');
       }
 
-      // 2. Location Permission දීලද බලනවා
+      // 2. Checking if location permission is granted.
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -149,17 +149,17 @@ class _ReportScreenState extends State<ReportScreen> {
         throw Exception('Location permissions are permanently denied.');
       }
 
-      // 3. ඇත්තම ඛණ්ඩාංක (Coordinates) ටික ගන්නවා
+      // 3. Get the actual coordinates.
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 4. Coordinates වලින් පාරේ නම/නගරය හොයනවා (Geocoding)
+      // 4. Finding a street name/city from coordinates (Geocoding)
       String address =
           "${position.latitude}, ${position.longitude}"; // Default එක
 
       if (!kIsWeb) {
-        // Web එකේදි සමහර වෙලාවට Geocoding වැඩ කරන්නේ නැති නිසා මේක Mobile වලට විතරක් සීමා කරනවා
+        // Geocoding sometimes doesn't work on the web, so this is limited to mobile only.
         try {
           List<Placemark> placemarks = await placemarkFromCoordinates(
             position.latitude,
@@ -250,7 +250,7 @@ class _ReportScreenState extends State<ReportScreen> {
         'location': _locationController.text.trim(),
         'imageBase64': base64Image,
         'status': 'Pending',
-        // මෙතන අර random ලොකේෂන් එක වෙනුවට 0,0 දානවා දැනට (Map Picker එක හරියට හැදුවම මෙතනට ඇත්ත Lat/Lng දෙන්න පුළුවන්)
+        // For now, we'll replace that random location with 0,0 (once the Map Picker is properly configured, we can give the actual Lat/Lng here)
         'latitude': 6.9271,
         'longitude': 79.8612,
         'timestamp': FieldValue.serverTimestamp(),
