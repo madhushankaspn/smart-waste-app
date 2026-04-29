@@ -11,13 +11,13 @@ class LanguageScreen extends StatefulWidget {
 }
 
 class _LanguageScreenState extends State<LanguageScreen> {
-  String _selectedLanguage = 'English'; // මුලින්ම English තෝරලා තියෙන්නේ
+  String _selectedLanguage = 'English';
 
   Future<void> _saveLanguageAndContinue() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', _selectedLanguage);
 
-    AppText.lang = _selectedLanguage; // අලුත් පේළිය: තෝරපු භාෂාව සෙට් කරනවා
+    AppText.lang = _selectedLanguage;
 
     if (mounted) {
       Navigator.pushReplacement(
@@ -34,7 +34,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          // අර ලස්සන ලා කොළ පාට Gradient එක
           gradient: LinearGradient(
             colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
             begin: Alignment.topCenter,
@@ -52,7 +51,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
               children: [
                 const Spacer(),
 
-                // ලස්සන සුදු පාට කොටුව ඇතුලේ තියෙන Globe Icon එක
                 Container(
                   width: 90,
                   height: 90,
@@ -117,12 +115,12 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
                 const Spacer(),
 
-                // Continue Button එක
+                // Continue Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50), // කොළ පාට
+                      backgroundColor: const Color(0xFF4CAF50),
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -151,7 +149,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
     );
   }
 
-  // Language තෝරන කාඩ් එක හදන Function එක
   Widget _buildLanguageOption({
     required String title,
     required String subtitle,
@@ -185,7 +182,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
         ),
         child: Row(
           children: [
-            // ලෝක ගෝලයේ පොඩි Icon එක
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -226,7 +222,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               ),
             ),
 
-            // Checkmark එක
+            // Checkmark
             Container(
               width: 24,
               height: 24,

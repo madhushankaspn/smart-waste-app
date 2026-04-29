@@ -14,7 +14,7 @@ class AppText {
       'points': 'Points',
       'pts': 'PTS',
       'next_milestone': 'NEXT MILESTONE',
-      'target': 'Target: Cinnamon Grand Dinner',
+      'target': 'Target: Silver Level',
       'next_collection': 'Next Garbage Collection',
       'tomorrow': 'Tomorrow, 08:00 AM',
       'plastic_paper': 'Plastic & Paper',

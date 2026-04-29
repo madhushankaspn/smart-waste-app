@@ -6,12 +6,12 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../translations.dart'; // අලුතින් දැම්මා
+import '../translations.dart';
 import 'login_screen.dart';
 import 'report_screen.dart';
-import 'report_history_screen.dart'; // අලුතින් දැම්මා
-import 'waste_guide_screen.dart'; // අලුතින් දැම්මා
-import 'eco_shorts_screen.dart'; // අලුතින් දැම්මා
+import 'report_history_screen.dart';
+import 'waste_guide_screen.dart';
+import 'eco_shorts_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1084,7 +1084,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 32),
 
           // --------------------------------------------------
-          // 1. අලුත් Eco Shorts Banner එක
+          // 1. New Eco Shorts Banner
           // --------------------------------------------------
           GestureDetector(
             onTap: () {
@@ -1099,10 +1099,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6A11CB),
-                    Color(0xFF2575FC),
-                  ], // ලස්සන දම්-නිල් Gradient එකක්
+                  colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1175,9 +1172,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 32),
 
-          // --------------------------------------------------
-          // 2. පරණ Daily Eco-Insights (Waste Guide) Banner එක
-          // --------------------------------------------------
           Text(
             AppText.get('daily_insights'),
             style: const TextStyle(
