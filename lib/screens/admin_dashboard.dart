@@ -144,9 +144,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       int newPoints = currentPoints + 1;
       String newLevel = 'Bronze';
 
-      if (newPoints >= 1000)
+      if (newPoints >= 1000) {
         newLevel = 'Platinum';
-      else if (newPoints >= 500)
+      } else if (newPoints >= 500)
         newLevel = 'Gold';
       else if (newPoints >= 100)
         newLevel = 'Silver';
@@ -157,18 +157,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
         'email': userEmail,
       }, SetOptions(merge: true));
 
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Team Assigned & Point Awarded!'),
             backgroundColor: Colors.green,
           ),
         );
+      }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
+      }
     }
   }
 
@@ -178,18 +180,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
           .collection('reports')
           .doc(reportId)
           .update({'status': 'Rejected'});
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Report Rejected!'),
             backgroundColor: Colors.redAccent,
           ),
         );
+      }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
+      }
     }
   }
 
@@ -580,17 +584,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting)
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(color: Colors.green),
                 );
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return const Center(
                   child: Text(
                     'No reports found.',
                     style: TextStyle(color: Colors.grey),
                   ),
                 );
+              }
 
               var reports = snapshot.data!.docs.where((doc) {
                 var data = doc.data() as Map<String, dynamic>;
@@ -611,8 +617,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   double? lat = report['latitude'];
                   double? lng = report['longitude'];
                   LatLng? reportLocation;
-                  if (lat != null && lng != null)
+                  if (lat != null && lng != null) {
                     reportLocation = LatLng(lat, lng);
+                  }
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 16),
@@ -907,10 +914,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('reports').snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.green),
           );
+        }
 
         List<Marker> mapMarkers = [];
 
@@ -1038,10 +1046,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
           .where('status', isEqualTo: 'Assigned')
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.green),
           );
+        }
 
         Map<String, int> teamWorkload = {};
         for (String team in _teamNames) {
@@ -1459,7 +1468,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   child: Column(
                     children: [
                       SwitchListTile(
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                         secondary: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -1481,7 +1490,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                       const Divider(height: 1, indent: 60, endIndent: 20),
                       SwitchListTile(
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                         secondary: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -1555,7 +1564,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             String csvData =
                                 "Report ID,Title,Location,Status,User Email\n";
                             for (var doc in snapshot.docs) {
-                              var data = doc.data() as Map<String, dynamic>;
+                              var data = doc.data();
                               csvData +=
                                   "${doc.id},${data['title']},${data['location']},${data['status']},${data['userEmail']}\n";
                             }
@@ -1585,13 +1594,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               );
                             }
                           } catch (e) {
-                            if (context.mounted)
+                            if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Error exporting data: $e'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
+                            }
                           }
                         },
                       ),
@@ -1652,7 +1662,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                       for (var doc in snapshot.docs) {
                                         await doc.reference.delete();
                                       }
-                                      if (context.mounted)
+                                      if (context.mounted) {
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
@@ -1663,8 +1673,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                             backgroundColor: Colors.red,
                                           ),
                                         );
+                                      }
                                     } catch (e) {
-                                      if (context.mounted)
+                                      if (context.mounted) {
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
@@ -1675,6 +1686,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                             backgroundColor: Colors.red,
                                           ),
                                         );
+                                      }
                                     }
                                   },
                                   child: const Text(
@@ -1716,13 +1728,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                     onPressed: () async {
                       await FirebaseAuth.instance.signOut();
-                      if (context.mounted)
+                      if (context.mounted) {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const LoginScreen(),
                           ),
                         );
+                      }
                     },
                   ),
                 ),
