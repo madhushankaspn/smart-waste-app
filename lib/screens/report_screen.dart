@@ -149,7 +149,7 @@ class _ReportScreenState extends State<ReportScreen> {
         throw Exception('Location permissions are permanently denied.');
       }
 
-      // 3. ඇත්තම ඛණ්ඩාංක (Coordinates) ටික ගන්නවා
+      // 3. Get the actual coordinates.
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
