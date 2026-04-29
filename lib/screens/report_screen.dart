@@ -154,7 +154,7 @@ class _ReportScreenState extends State<ReportScreen> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 4. Coordinates වලින් පාරේ නම/නගරය හොයනවා (Geocoding)
+      // 4. Finding a street name/city from coordinates (Geocoding)
       String address =
           "${position.latitude}, ${position.longitude}"; // Default එක
 
