@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http; // Search කරන්න මේක ඕනේ
+import 'package:http/http.dart' as http; // You need this to search
 import 'dart:convert';
 
 class MapPickerScreen extends StatefulWidget {
@@ -13,11 +13,11 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  LatLng _currentPosition = const LatLng(6.9271, 79.8612); // කොළඹ
+  LatLng _currentPosition = const LatLng(6.9271, 79.8612);
   LatLng? _pickedLocation;
   final MapController _mapController = MapController();
   final TextEditingController _searchController =
-      TextEditingController(); // Search Box එකේ Controller එක
+      TextEditingController(); // The controller in the search box
   bool _isLoadingLocation = false;
 
   @override
@@ -66,19 +66,19 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   // ------------------------------------------------------------------------
-  // අලුත් කෑල්ල: නම ගහලා Search කරන Function එක
+  // New feature: Search function by name
   // ------------------------------------------------------------------------
   Future<void> _searchLocation(String query) async {
     if (query.trim().isEmpty) return;
 
-    // කියවන්න ලේසි වෙන්න පොඩි ලෝඩින් එකක් පෙන්වනවා
+    // A small loading screen is shown to make it easier to read.
     setState(() => _isLoadingLocation = true);
 
-    // ෆෝන් එකේ කීබෝඩ් එක පල්ලෙහාට දානවා
+    // Putting the phone's keyboard down
     FocusScope.of(context).unfocus();
 
     try {
-      // OpenStreetMap API එකට රික්වෙස්ට් එක යවනවා (ලංකාව ඇතුලෙ තැන් වලට ප්‍රමුඛතාවය දෙනවා)
+      // Sending the request to the OpenStreetMap API (prioritizing locations within Sri Lanka)
       final url = Uri.parse(
         'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=1&countrycodes=LK',
       );
@@ -92,20 +92,20 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         final List data = json.decode(response.body);
 
         if (data.isNotEmpty) {
-          // ලොකේෂන් එක හොයාගත්තා නම් ඒක ගන්නවා
+          // If you find the location, you'll take it.
           final lat = double.parse(data[0]['lat']);
           final lon = double.parse(data[0]['lon']);
           final newLocation = LatLng(lat, lon);
 
           setState(() {
             _currentPosition = newLocation;
-            _pickedLocation = newLocation; // පින් එකත් එතනටම දානවා
+            _pickedLocation = newLocation; // put the pin right there.
           });
 
-          // මැප් එක ඒ තැනට අරන් යනවා
+          // The map takes you there.
           _mapController.move(newLocation, 15.0);
         } else {
-          // තැන හොයාගන්න බැරි වුණොත්
+          // If you can't find the place
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -154,7 +154,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. මැප් එක
+          // 1. The map
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -166,7 +166,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 });
                 FocusScope.of(
                   context,
-                ).unfocus(); // මැප් එක එබුවම කීබෝඩ් එක අයින් වෙනවා
+                ).unfocus(); // The keyboard disappears when you press the map.
               },
             ),
             children: [
@@ -192,7 +192,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ],
           ),
 
-          // 2. අලුතින් එකතු කරපු Search Bar එක
+          // 2. The newly added Search Bar
           Positioned(
             top: 16,
             left: 16,
@@ -214,7 +214,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           border: InputBorder.none,
                           icon: Icon(Icons.search, color: Colors.grey),
                         ),
-                        // කීබෝඩ් එකේ Enter එබුවමත් Search වෙනවා
+                        // Search is also performed when you press Enter on the keyboard.
                         onSubmitted: (value) => _searchLocation(value),
                       ),
                     ),
@@ -231,7 +231,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
-          // 3. Loading Indicator එක
+          // 3. Loading Indicator
           if (_isLoadingLocation)
             const Center(
               child: Card(
@@ -268,7 +268,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ),
         ],
       ),
-      // GPS බොත්තම
+      // GPS Button
       floatingActionButton: FloatingActionButton(
         onPressed: _getCurrentLocation,
         backgroundColor: Colors.white,
