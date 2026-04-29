@@ -1105,10 +1105,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6A11CB),
-                    Color(0xFF2575FC),
-                  ], // ලස්සන දම්-නිල් Gradient එකක්
+                  colors: [Color(0xFF6A11CB), Color(0xFF2575FC)], //  Gradient
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1182,7 +1179,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 32),
 
           // --------------------------------------------------
-          // 2. පරණ Daily Eco-Insights (Waste Guide) Banner එක
+          // 2. old Daily Eco-Insights (Waste Guide) Banner
           // --------------------------------------------------
           Text(
             AppText.get('daily_insights'),
