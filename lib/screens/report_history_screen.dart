@@ -141,7 +141,7 @@ class ReportHistoryScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            // විස්තර ටික
+                            // all details
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
