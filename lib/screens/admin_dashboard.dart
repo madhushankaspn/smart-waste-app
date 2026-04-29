@@ -1604,7 +1604,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                       const Divider(height: 1, indent: 60, endIndent: 20),
 
-                      // 2. Clear Old Data Button (දැන් වැඩ කරනවා!)
+                      // 2. Clear Old Data Button
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
