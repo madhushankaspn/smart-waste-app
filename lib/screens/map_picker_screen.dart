@@ -66,15 +66,15 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   // ------------------------------------------------------------------------
-  // අලුත් කෑල්ල: නම ගහලා Search කරන Function එක
+  // New feature: Search function by name
   // ------------------------------------------------------------------------
   Future<void> _searchLocation(String query) async {
     if (query.trim().isEmpty) return;
 
-    // කියවන්න ලේසි වෙන්න පොඩි ලෝඩින් එකක් පෙන්වනවා
+    // A small loading screen is shown to make it easier to read.
     setState(() => _isLoadingLocation = true);
 
-    // ෆෝන් එකේ කීබෝඩ් එක පල්ලෙහාට දානවා
+    // Putting the phone's keyboard down
     FocusScope.of(context).unfocus();
 
     try {
