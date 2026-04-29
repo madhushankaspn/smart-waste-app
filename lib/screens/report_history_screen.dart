@@ -178,7 +178,7 @@ class ReportHistoryScreen extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  // Status Badge එක
+                                  // A status badge
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
