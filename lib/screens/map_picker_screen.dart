@@ -192,7 +192,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ],
           ),
 
-          // 2. අලුතින් එකතු කරපු Search Bar එක
+          // 2. The newly added Search Bar
           Positioned(
             top: 16,
             left: 16,
@@ -214,7 +214,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           border: InputBorder.none,
                           icon: Icon(Icons.search, color: Colors.grey),
                         ),
-                        // කීබෝඩ් එකේ Enter එබුවමත් Search වෙනවා
+                        // Search is also performed when you press Enter on the keyboard.
                         onSubmitted: (value) => _searchLocation(value),
                       ),
                     ),
