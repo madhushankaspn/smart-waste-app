@@ -1367,7 +1367,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // TAB 4: New PREMIUM SETTINGS TAB
-  // ==========================================
+
   Widget _buildSettingsTab() {
     return Column(
       children: [
