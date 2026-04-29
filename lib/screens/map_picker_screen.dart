@@ -268,7 +268,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ),
         ],
       ),
-      // GPS බොත්තම
+      // GPS Button
       floatingActionButton: FloatingActionButton(
         onPressed: _getCurrentLocation,
         backgroundColor: Colors.white,
