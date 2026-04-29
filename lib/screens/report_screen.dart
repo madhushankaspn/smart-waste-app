@@ -136,7 +136,7 @@ class _ReportScreenState extends State<ReportScreen> {
         throw Exception('Location services are disabled. Please turn on GPS.');
       }
 
-      // 2. Location Permission දීලද බලනවා
+      // 2. Checking if location permission is granted.
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
