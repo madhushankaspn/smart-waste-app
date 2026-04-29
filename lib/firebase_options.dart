@@ -71,5 +71,4 @@ class DefaultFirebaseOptions {
     authDomain: 'smart-waste-nsbm-30.firebaseapp.com',
     storageBucket: 'smart-waste-nsbm-30.firebasestorage.app',
   );
-
 }
