@@ -231,7 +231,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
-          // 3. Loading Indicator එක
+          // 3. Loading Indicator
           if (_isLoadingLocation)
             const Center(
               child: Card(
