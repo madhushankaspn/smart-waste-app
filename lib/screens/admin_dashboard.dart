@@ -907,9 +907,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
   // TAB 2: Live Map
-  // ==========================================
+
   Widget _buildLiveMapTab() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('reports').snapshots(),
