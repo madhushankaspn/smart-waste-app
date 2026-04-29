@@ -1554,7 +1554,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         trailing: const Icon(Icons.copy, color: Colors.grey),
                         onTap: () async {
                           try {
-                            // Database එකෙන් Data ගන්නවා
+                            // Take Data From Database
                             var snapshot = await FirebaseFirestore.instance
                                 .collection('reports')
                                 .get();
