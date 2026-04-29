@@ -1645,9 +1645,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     backgroundColor: Colors.red,
                                   ),
                                   onPressed: () async {
-                                    Navigator.pop(context); // Dialog එක වහනවා
+                                    Navigator.pop(context); // Dialog closed
                                     try {
-                                      // Status එක Assigned හෝ Rejected ඒවා විතරක් මකනවා
+                                      // Status  Assigned or reject ones are deleted
                                       var snapshot = await FirebaseFirestore
                                           .instance
                                           .collection('reports')
