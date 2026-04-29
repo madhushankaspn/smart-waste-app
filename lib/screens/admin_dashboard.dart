@@ -1366,8 +1366,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // ==========================================
-  // TAB 4: අලුත් PREMIUM SETTINGS TAB
+  // TAB 4: New PREMIUM SETTINGS TAB
   // ==========================================
   Widget _buildSettingsTab() {
     return Column(
