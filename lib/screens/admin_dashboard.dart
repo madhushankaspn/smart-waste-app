@@ -1746,7 +1746,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   // ==========================================
-  // ප්‍රධාන Build Function එක
+  // Main Build Function with Bottom Navigation
   // ==========================================
   @override
   Widget build(BuildContext context) {
