@@ -1534,7 +1534,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   color: Colors.white,
                   child: Column(
                     children: [
-                      // 1. Export CSV Button (දැන් වැඩ කරනවා!)
+                      // 1. Export CSV Button
                       ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
