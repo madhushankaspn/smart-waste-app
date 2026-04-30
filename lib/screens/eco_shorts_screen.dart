@@ -8,7 +8,6 @@ class EcoShortsScreen extends StatefulWidget {
 }
 
 class _EcoShortsScreenState extends State<EcoShortsScreen> {
-  // වීඩියෝ වල විස්තර (දැනට බොරු විස්තර ටිකක් දාලා තියෙන්නේ)
   final List<Map<String, String>> _videos = [
     {
       "title": "How to recycle plastic bottles ♻️",
@@ -39,10 +38,10 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // TikTok වගේ පිටුපස කලු පාටයි
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Vertical Scroll වෙන PageView එක (උඩට පල්ලෙහාට යවන්න)
+          // Vertical Scroll
           PageView.builder(
             scrollDirection: Axis.vertical,
             itemCount: _videos.length,
@@ -51,7 +50,7 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
             },
           ),
 
-          // Back Button එක උඩින්ම තියෙනවා
+          // Back Button
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -70,7 +69,7 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 40), // Balance කරන්න
+                  const SizedBox(width: 40), // Balance
                 ],
               ),
             ),
@@ -80,15 +79,14 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
     );
   }
 
-  // එක වීඩියෝ එකක UI එක
   Widget _buildVideoPlayerUI(Map<String, String> videoData) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // වීඩියෝ එකේ Thumbnail එක (පස්සේ මේක Video Player එකක් වෙනවා)
+        //  Thumbnail
         Image.network(videoData["image"]!, fit: BoxFit.cover),
 
-        // අඳුරු Gradient එකක් (අකුරු පැහැදිලිව පේන්න)
+        // Gradient
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -104,7 +102,7 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
           ),
         ),
 
-        // මැද තියෙන Play Button එක
+        //  Play Button
         Center(
           child: Icon(
             Icons.play_circle_outline,
@@ -113,7 +111,7 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
           ),
         ),
 
-        // යටින් තියෙන විස්තර ටික (Title, User)
+        //  (Title, User)
         Positioned(
           bottom: 40,
           left: 20,
@@ -149,7 +147,7 @@ class _EcoShortsScreenState extends State<EcoShortsScreen> {
           ),
         ),
 
-        // දකුණු පැත්තේ තියෙන බොත්තම් ටික (Like, Comment, Share)
+        //  (Like, Comment, Share)
         Positioned(
           bottom: 40,
           right: 10,
